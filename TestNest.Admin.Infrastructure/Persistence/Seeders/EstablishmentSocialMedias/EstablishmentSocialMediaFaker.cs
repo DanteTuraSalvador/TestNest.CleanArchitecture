@@ -4,6 +4,7 @@ using TestNest.Admin.Domain.SocialMedias;
 using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.EstablishmentSocialMedias;
+
 public sealed class EstablishmentSocialMediaFaker : Faker<EstablishmentSocialMedia>
 {
     public EstablishmentSocialMediaFaker(
@@ -35,7 +36,7 @@ public sealed class EstablishmentSocialMediaFaker : Faker<EstablishmentSocialMed
         });
     }
 
-    private static string GenerateValidAccountName(Faker f, string platformName) 
+    private static string GenerateValidAccountName(Faker f, string platformName)
         => platformName.ToLowerInvariant() switch
         {
             "facebook" => f.Internet.UserName() + f.Random.Number(100, 999),

@@ -22,32 +22,32 @@ public class ResultTests
         var result = Result.Failure(ErrorType.Validation, error);
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal(error, result.Errors.First());
+        _ = Assert.Single(result.Errors);
+        Assert.Equal(error, result.Errors[0]);
     }
 
     [Fact]
     public void Failure_WithErrorTypeNone_ThrowsResultException()
     {
         var error = new Error("100", "Test Error");
-        var exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.None, error));
+        ResultException exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.None, error));
         Assert.Equal(typeof(Result), exception.ResultType);
-        Assert.Single(exception.Errors);
-        Assert.Equal("Invalid error type.", exception.Errors.First());
+        _ = Assert.Single(exception.Errors);
+        Assert.Equal("Invalid error type.", exception.Errors[0]);
     }
 
     [Fact]
     public void Failure_WithErrorWithInvalidCodeOrMessage_ThrowsResultException()
     {
-        var exceptionNullCode = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, new Error(null!, "Test")));
+        ResultException exceptionNullCode = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, new Error(null!, "Test")));
         Assert.Equal(typeof(Error), exceptionNullCode.ResultType);
-        Assert.Single(exceptionNullCode.Errors);
-        Assert.Equal("Error code cannot be null or empty.", exceptionNullCode.Errors.First());
+        _ = Assert.Single(exceptionNullCode.Errors);
+        Assert.Equal("Error code cannot be null or empty.", exceptionNullCode.Errors[0]);
 
-        var exceptionNullMessage = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, new Error("100", null!)));
+        ResultException exceptionNullMessage = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, new Error("100", null!)));
         Assert.Equal(typeof(Error), exceptionNullMessage.ResultType);
-        Assert.Single(exceptionNullMessage.Errors);
-        Assert.Equal("Error message cannot be null or empty.", exceptionNullMessage.Errors.First());
+        _ = Assert.Single(exceptionNullMessage.Errors);
+        Assert.Equal("Error message cannot be null or empty.", exceptionNullMessage.Errors[0]);
     }
 
     [Fact]
@@ -70,41 +70,38 @@ public class ResultTests
         var error1 = new Error("200", "Error 1");
         var error2 = new Error("300", "Error 2");
         var errors = new List<Error> { error1, error2 };
-        var exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.None, errors));
+        ResultException exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.None, errors));
         Assert.Equal(typeof(Result), exception.ResultType);
-        Assert.Single(exception.Errors);
-        Assert.Equal("Invalid error type.", exception.Errors.First());
+        _ = Assert.Single(exception.Errors);
+        Assert.Equal("Invalid error type.", exception.Errors[0]);
     }
 
     [Fact]
-    public void Failure_WithNullErrors_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Result.Failure(ErrorType.Internal, (IEnumerable<Error>)null!));
-    }
+    public void Failure_WithNullErrors_ThrowsArgumentNullException() => Assert.Throws<ArgumentNullException>(() => Result.Failure(ErrorType.Internal, (IEnumerable<Error>)null!));
 
     [Fact]
     public void Failure_WithEmptyErrors_ThrowsResultException()
     {
-        var exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Conflict, Enumerable.Empty<Error>()));
+        ResultException exception = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Conflict, Enumerable.Empty<Error>()));
         Assert.Equal(typeof(Result), exception.ResultType);
-        Assert.Single(exception.Errors);
-        Assert.Equal("Error list cannot be empty.", exception.Errors.First());
+        _ = Assert.Single(exception.Errors);
+        Assert.Equal("Error list cannot be empty.", exception.Errors[0]);
     }
 
     [Fact]
     public void Failure_WithMultipleErrorsHavingInvalidCodeOrMessage_ThrowsResultException()
     {
-        var errorsWithNullCode = new List<Error> { new Error(null!, "Test"), new Error("100", "Valid") };
-        var exceptionNullCode = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, errorsWithNullCode));
+        var errorsWithNullCode = new List<Error> { new(null!, "Test"), new("100", "Valid") };
+        ResultException exceptionNullCode = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, errorsWithNullCode));
         Assert.Equal(typeof(Error), exceptionNullCode.ResultType);
-        Assert.Single(exceptionNullCode.Errors);
-        Assert.Equal("Error code cannot be null or empty.", exceptionNullCode.Errors.First());
+        _ = Assert.Single(exceptionNullCode.Errors);
+        Assert.Equal("Error code cannot be null or empty.", exceptionNullCode.Errors[0]);
 
-        var errorsWithNullMessage = new List<Error> { new Error("100", null!), new Error("200", "Valid") };
-        var exceptionNullMessage = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, errorsWithNullMessage));
+        var errorsWithNullMessage = new List<Error> { new("100", null!), new("200", "Valid") };
+        ResultException exceptionNullMessage = Assert.Throws<ResultException>(() => Result.Failure(ErrorType.Validation, errorsWithNullMessage));
         Assert.Equal(typeof(Error), exceptionNullMessage.ResultType);
-        Assert.Single(exceptionNullMessage.Errors);
-        Assert.Equal("Error message cannot be null or empty.", exceptionNullMessage.Errors.First());
+        _ = Assert.Single(exceptionNullMessage.Errors);
+        Assert.Equal("Error message cannot be null or empty.", exceptionNullMessage.Errors[0]);
     }
 
     [Fact]
@@ -113,9 +110,9 @@ public class ResultTests
         var result = Result.Failure(ErrorType.Validation, "400", "Invalid Input");
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal("400", result.Errors.First().Code);
-        Assert.Equal("Invalid Input", result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal("400", result.Errors[0].Code);
+        Assert.Equal("Invalid Input", result.Errors[0].Message);
     }
 
     [Fact]
@@ -135,8 +132,8 @@ public class ResultTests
         var result = Result.Combine(Result.Success(), failureResult, Result.Success());
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Aggregate, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal(error, result.Errors.First());
+        _ = Assert.Single(result.Errors);
+        Assert.Equal(error, result.Errors[0]);
     }
 
     [Fact]
@@ -179,11 +176,11 @@ public class ResultTests
     {
         var error = new Error("800", "Failure Value");
         var failureResult = Result.Failure(ErrorType.Conflict, error);
-        var resultOfT = failureResult.ToResult<string>("some value");
+        var resultOfT = failureResult.ToResult("some value");
         Assert.False(resultOfT.IsSuccess);
         Assert.Equal(ErrorType.Conflict, resultOfT.ErrorType);
-        Assert.Single(resultOfT.Errors);
-        Assert.Equal(error, resultOfT.Errors.First());
+        _ = Assert.Single(resultOfT.Errors);
+        Assert.Equal(error, resultOfT.Errors[0]);
         Assert.Null(resultOfT.Value);
     }
 
@@ -191,11 +188,11 @@ public class ResultTests
     public void Bind_OnSuccess_ExecutesBindAndReturnsItsResult()
     {
         var successResult = Result.Success();
-        var bindResult = successResult.Bind(() => Result.Failure(ErrorType.Validation, new Error("900", "Bind Failure")));
+        Result bindResult = successResult.Bind(() => Result.Failure(ErrorType.Validation, new Error("900", "Bind Failure")));
         Assert.False(bindResult.IsSuccess);
         Assert.Equal(ErrorType.Validation, bindResult.ErrorType);
-        Assert.Single(bindResult.Errors);
-        Assert.Equal("900", bindResult.Errors.First().Code);
+        _ = Assert.Single(bindResult.Errors);
+        Assert.Equal("900", bindResult.Errors[0].Code);
     }
 
     [Fact]
@@ -203,12 +200,12 @@ public class ResultTests
     {
         var error = new Error("1000", "Original Failure");
         var failureResult = Result.Failure(ErrorType.NotFound, error);
-        var bindExecuted = false;
-        var bindResult = failureResult.Bind(() => { bindExecuted = true; return Result.Success(); });
+        bool bindExecuted = false;
+        Result bindResult = failureResult.Bind(() => { bindExecuted = true; return Result.Success(); });
         Assert.False(bindResult.IsSuccess);
         Assert.Equal(ErrorType.NotFound, bindResult.ErrorType);
-        Assert.Single(bindResult.Errors);
-        Assert.Equal(error, bindResult.Errors.First());
+        _ = Assert.Single(bindResult.Errors);
+        Assert.Equal(error, bindResult.Errors[0]);
         Assert.False(bindExecuted);
     }
 
@@ -216,7 +213,7 @@ public class ResultTests
     public void BindOfT_OnSuccess_ExecutesBindAndReturnsItsResult()
     {
         var successResult = Result.Success();
-        var bindResult = successResult.Bind(() => Result<string>.Success("bound value"));
+        Result<string> bindResult = successResult.Bind(() => Result<string>.Success("bound value"));
         Assert.True(bindResult.IsSuccess);
         Assert.Equal("bound value", bindResult.Value);
         Assert.Equal(ErrorType.None, bindResult.ErrorType);
@@ -228,12 +225,12 @@ public class ResultTests
     {
         var error = new Error("1100", "Original Failure");
         var failureResult = Result.Failure(ErrorType.Conflict, error);
-        var bindExecuted = false;
-        var bindResult = failureResult.Bind(() => { bindExecuted = true; return Result<string>.Success("bound value"); });
+        bool bindExecuted = false;
+        Result<string> bindResult = failureResult.Bind(() => { bindExecuted = true; return Result<string>.Success("bound value"); });
         Assert.False(bindResult.IsSuccess);
         Assert.Equal(ErrorType.Conflict, bindResult.ErrorType);
-        Assert.Single(bindResult.Errors);
-        Assert.Equal(error, bindResult.Errors.First());
+        _ = Assert.Single(bindResult.Errors);
+        Assert.Equal(error, bindResult.Errors[0]);
         Assert.Null(bindResult.Value);
         Assert.False(bindExecuted);
     }
@@ -242,8 +239,8 @@ public class ResultTests
     public void Map_OnSuccess_ExecutesMap()
     {
         var successResult = Result.Success();
-        var mapExecuted = false;
-        var mappedResult = successResult.Map(() => mapExecuted = true);
+        bool mapExecuted = false;
+        Result<bool> mappedResult = successResult.Map(() => mapExecuted = true);
         Assert.True(mappedResult.IsSuccess);
         Assert.Equal(ErrorType.None, mappedResult.ErrorType);
         Assert.Empty(mappedResult.Errors);
@@ -255,12 +252,12 @@ public class ResultTests
     {
         var error = new Error("1200", "Failure");
         var failureResult = Result.Failure(ErrorType.Validation, error);
-        var mapExecuted = false;
-        var mappedResult = failureResult.Map(() => mapExecuted = true);
+        bool mapExecuted = false;
+        Result<bool> mappedResult = failureResult.Map(() => mapExecuted = true);
         Assert.False(mappedResult.IsSuccess);
         Assert.Equal(ErrorType.Validation, mappedResult.ErrorType);
-        Assert.Single(mappedResult.Errors);
-        Assert.Equal(error, mappedResult.Errors.First());
+        _ = Assert.Single(mappedResult.Errors);
+        Assert.Equal(error, mappedResult.Errors[0]);
         Assert.False(mapExecuted);
     }
 
@@ -268,7 +265,7 @@ public class ResultTests
     public void MapOfT_OnSuccess_ExecutesMapAndReturnsSuccessResultOfT()
     {
         var successResult = Result.Success();
-        var mappedResult = successResult.Map(() => "mapped value");
+        Result<string> mappedResult = successResult.Map(() => "mapped value");
         Assert.True(mappedResult.IsSuccess);
         Assert.Equal("mapped value", mappedResult.Value);
         Assert.Equal(ErrorType.None, mappedResult.ErrorType);
@@ -280,13 +277,13 @@ public class ResultTests
     {
         var error = new Error("1300", "Failure");
         var failureResult = Result.Failure(ErrorType.NotFound, error);
-        var mapExecuted = false;
-        var mappedResult = failureResult.Map(() => { mapExecuted = true; return "mapped value"; });
+        bool mapExecuted = false;
+        Result<string> mappedResult = failureResult.Map(() => { mapExecuted = true; return "mapped value"; });
         Assert.False(mappedResult.IsSuccess);
         Assert.Null(mappedResult.Value);
         Assert.Equal(ErrorType.NotFound, mappedResult.ErrorType);
-        Assert.Single(mappedResult.Errors);
-        Assert.Equal(error, mappedResult.Errors.First());
+        _ = Assert.Single(mappedResult.Errors);
+        Assert.Equal(error, mappedResult.Errors[0]);
         Assert.False(mapExecuted);
     }
 
@@ -296,7 +293,7 @@ public class ResultTests
     public void Deconstruct_SuccessResult_ReturnsCorrectValues()
     {
         var result = Result.Success();
-        var (isSuccess, errorType, errors) = result;
+        (bool isSuccess, ErrorType errorType, IReadOnlyList<Error> errors) = result;
         Assert.True(isSuccess);
         Assert.Equal(ErrorType.None, errorType);
         Assert.Empty(errors);
@@ -307,11 +304,11 @@ public class ResultTests
     {
         var error = new Error("1400", "Deconstruct Error");
         var result = Result.Failure(ErrorType.Conflict, error);
-        var (isSuccess, errorType, errors) = result;
+        (bool isSuccess, ErrorType errorType, IReadOnlyList<Error> errors) = result;
         Assert.False(isSuccess);
         Assert.Equal(ErrorType.Conflict, errorType);
-        Assert.Single(errors);
-        Assert.Equal(error, errors.First());
+        _ = Assert.Single(errors);
+        Assert.Equal(error, errors[0]);
     }
 
     [Fact]
@@ -321,9 +318,9 @@ public class ResultTests
         var result = Result.Failure(exception);
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal("InvalidOperationException", result.Errors.First().Code);
-        Assert.Equal("Test Exception with no code", result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal("InvalidOperationException", result.Errors[0].Code);
+        Assert.Equal("Test Exception with no code", result.Errors[0].Message);
     }
 
     // Assuming you have an IHasErrorCode interface and an exception implementing it
@@ -333,16 +330,10 @@ public class ResultTests
         string Message { get; }
     }
 
-    public class TestErrorCodeException : Exception, Exceptions.Common.IHasErrorCode
+    public class TestErrorCodeException(string code, string message) : Exception(message), Exceptions.Common.IHasErrorCode
     {
-        public string Code { get; }
-        public override string Message { get; }
-
-        public TestErrorCodeException(string code, string message) : base(message)
-        {
-            Code = code;
-            Message = message;
-        }
+        public string Code { get; } = code;
+        public override string Message { get; } = message;
     }
 
     [Fact]
@@ -352,8 +343,8 @@ public class ResultTests
         var result = Result.Failure(exception);
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal("ERR-001", result.Errors.First().Code);
-        Assert.Equal("Test Exception with code", result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal("ERR-001", result.Errors[0].Code);
+        Assert.Equal("Test Exception with code", result.Errors[0].Message);
     }
 }

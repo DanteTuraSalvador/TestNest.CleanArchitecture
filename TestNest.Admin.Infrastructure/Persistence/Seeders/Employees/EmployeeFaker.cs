@@ -1,9 +1,9 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.Employees;
 using TestNest.Admin.Domain.Establishments;
-using TestNest.Admin.SharedLibrary.ValueObjects.Enums;
-using TestNest.Admin.SharedLibrary.ValueObjects;
 using TestNest.Admin.SharedLibrary.Common.Results;
+using TestNest.Admin.SharedLibrary.ValueObjects;
+using TestNest.Admin.SharedLibrary.ValueObjects.Enums;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.Employees;
 

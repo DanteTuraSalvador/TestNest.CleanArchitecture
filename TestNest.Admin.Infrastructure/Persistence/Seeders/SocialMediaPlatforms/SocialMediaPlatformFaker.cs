@@ -1,8 +1,10 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.SocialMedias;
-using TestNest.Admin.SharedLibrary.ValueObjects;
 using TestNest.Admin.SharedLibrary.Common.Results;
+using TestNest.Admin.SharedLibrary.ValueObjects;
+
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.SocialMediaPlatforms;
+
 public sealed class SocialMediaPlatformFaker : Faker<SocialMediaPlatform>
 {
     private readonly List<string> _popularPlatforms =
@@ -11,7 +13,7 @@ public sealed class SocialMediaPlatformFaker : Faker<SocialMediaPlatform>
         "YouTube", "TikTok", "Pinterest", "Snapchat"
     ];
 
-    public SocialMediaPlatformFaker() 
+    public SocialMediaPlatformFaker()
         => CustomInstantiator(f =>
             {
                 for (int i = 0; i < 5; i++)

@@ -293,7 +293,7 @@ public class EstablishmentAddressService(
         EstablishmentAddressId? excludedAddressId = null)
     {
         Result<EstablishmentAddressId> idResult = excludedAddressId == null
-            ? IdHelper.ValidateAndCreateId<EstablishmentAddressId>(Guid.NewGuid().ToString()) 
+            ? IdHelper.ValidateAndCreateId<EstablishmentAddressId>(Guid.NewGuid().ToString())
             : IdHelper.ValidateAndCreateId<EstablishmentAddressId>(excludedAddressId.Value.ToString());
 
         if (!idResult.IsSuccess)

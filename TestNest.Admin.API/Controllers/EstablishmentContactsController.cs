@@ -12,7 +12,6 @@ using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 
 namespace TestNest.Admin.API.Controllers;
 
-
 [ApiController]
 [Route("api/[controller]")]
 public class EstablishmentContactsController(

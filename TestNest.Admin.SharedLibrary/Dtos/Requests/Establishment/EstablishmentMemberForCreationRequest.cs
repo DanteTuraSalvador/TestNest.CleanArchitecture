@@ -7,5 +7,4 @@ public record EstablishmentMemberForCreationRequest
     public string MemberTitle { get; set; }
     public string MemberDescription { get; set; }
     public string MemberTag { get; set; }
-
-} 
+}

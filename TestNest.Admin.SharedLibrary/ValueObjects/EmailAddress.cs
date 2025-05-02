@@ -58,6 +58,4 @@ public sealed class EmailAddress : ValueObject
     protected override IEnumerable<object?> GetAtomicValues() => [Email];
 
     public override string ToString() => Email;
-
-   
 }

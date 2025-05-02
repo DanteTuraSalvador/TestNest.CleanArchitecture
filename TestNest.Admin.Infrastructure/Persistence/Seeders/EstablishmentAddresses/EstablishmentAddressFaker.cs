@@ -2,6 +2,7 @@
 using TestNest.Admin.Domain.Establishments;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.EstablishmentAddresses;
+
 public sealed class EstablishmentAddressFaker : Faker<EstablishmentAddress>
 {
     private const bool DefaultPrimaryAddressValue = false;

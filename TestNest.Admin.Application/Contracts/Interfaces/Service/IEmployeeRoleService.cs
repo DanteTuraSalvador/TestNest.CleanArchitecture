@@ -2,8 +2,8 @@
 using TestNest.Admin.Domain.Employees;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.Employee;
-using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 using TestNest.Admin.SharedLibrary.Dtos.Responses;
+using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 
 namespace TestNest.Admin.Application.Contracts.Interfaces.Service;
 

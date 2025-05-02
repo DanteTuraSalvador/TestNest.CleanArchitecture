@@ -33,7 +33,7 @@ public sealed class EmployeeNumber : ValueObject
             Guard.AgainstCondition(!EmployeeNumberRegex.IsMatch(employeeNumber),
                 static () => EmployeeNumberException.InvalidEmployeeNumberFormat()),
             Guard.AgainstRange(employeeNumber.Length, 3, 10,
-                static() => EmployeeNumberException.LengthOutOfRangeEmployeeNumber())
+                static () => EmployeeNumberException.LengthOutOfRangeEmployeeNumber())
         );
         return result.IsSuccess
             ? Result<EmployeeNumber>.Success(new EmployeeNumber(employeeNumber))

@@ -1,7 +1,7 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.Establishments;
-using TestNest.Admin.SharedLibrary.ValueObjects;
 using TestNest.Admin.SharedLibrary.Common.Results;
+using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.EstablishmentContacts;
 
@@ -9,7 +9,7 @@ public sealed class EstablishmentContactFaker : Faker<EstablishmentContact>
 {
     private static bool HasPrimaryContact => false;
 
-    public EstablishmentContactFaker(List<Establishment> establishments) 
+    public EstablishmentContactFaker(List<Establishment> establishments)
         => CustomInstantiator(f =>
             {
                 Establishment establishment = f.PickRandom(establishments);
@@ -20,7 +20,6 @@ public sealed class EstablishmentContactFaker : Faker<EstablishmentContact>
                     phoneNumber,
                     isPrimary: !HasPrimaryContact).Value!;
             });
-
 
     private static (PersonName Name, PhoneNumber Phone) GenerateValidContact(Faker f)
     {
@@ -42,7 +41,7 @@ public sealed class EstablishmentContactFaker : Faker<EstablishmentContact>
         PhoneNumber phoneNumber;
         do
         {
-            string phone = f.Phone.PhoneNumber("+###########") 
+            string phone = f.Phone.PhoneNumber("+###########")
                         .Replace(" ", "")
                         .Replace("-", "");
 

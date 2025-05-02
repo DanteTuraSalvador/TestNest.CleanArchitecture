@@ -18,7 +18,9 @@ public sealed class EstablishmentContact : BaseEntity<EstablishmentContactId>
 
     private static readonly Lazy<EstablishmentContact> _empty = new(()
         => new EstablishmentContact());
-    public bool IsEmpty() => this == Empty(); 
+
+    public bool IsEmpty() => this == Empty();
+
     public static EstablishmentContact Empty() => _empty.Value;
 
     public Establishment Establishment { get; private set; } = default!;
@@ -43,9 +45,9 @@ public sealed class EstablishmentContact : BaseEntity<EstablishmentContactId>
        bool isPrimary = true)
     {
         var result = Result.Combine(
-            Guard.AgainstCondition(contactPerson.IsEmpty(),
+            Guard.AgainstNull(contactPerson,
                 static () => PersonNameException.NullPersonName()),
-            Guard.AgainstCondition(contactPhone.IsEmpty(),
+            Guard.AgainstNull(contactPhone,
                 static () => PhoneNumberException.InvalidFormat())
         );
 

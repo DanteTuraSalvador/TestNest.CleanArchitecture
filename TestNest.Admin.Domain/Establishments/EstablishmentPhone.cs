@@ -18,7 +18,9 @@ public sealed class EstablishmentPhone : BaseEntity<EstablishmentPhoneId>
 
     private static readonly Lazy<EstablishmentPhone> _empty = new(()
         => new EstablishmentPhone());
+
     public bool IsEmpty() => this == Empty();
+
     public static EstablishmentPhone Empty()
         => _empty.Value;
 

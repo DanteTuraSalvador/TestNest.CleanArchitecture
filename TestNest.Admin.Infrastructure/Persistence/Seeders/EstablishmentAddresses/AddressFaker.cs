@@ -2,6 +2,7 @@
 using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.EstablishmentAddresses;
+
 public sealed class AddressFaker : Faker<Address>
 {
     public AddressFaker() => CustomInstantiator(f =>

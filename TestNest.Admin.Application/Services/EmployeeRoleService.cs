@@ -181,5 +181,6 @@ public class EmployeeRoleService(
 
     public async Task<Result<int>> CountAsync(ISpecification<EmployeeRole> spec)
         => await _employeeRoleRepository.CountAsync(spec);
+
     Task<Result<EmployeeRoleResponse>> IEmployeeRoleService.GetEmployeeRoleByIdAsync(EmployeeRoleId employeeRoleId) => throw new NotImplementedException();
 }

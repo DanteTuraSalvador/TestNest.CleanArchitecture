@@ -9,7 +9,7 @@ namespace TestNest.Admin.Application.Contracts.Interfaces.Service;
 
 public interface IEstablishmentAddressService
 {
-    Task<Result<EstablishmentAddressResponse>> CreateEstablishmentAddressAsync(EstablishmentAddressForCreationRequest request); 
+    Task<Result<EstablishmentAddressResponse>> CreateEstablishmentAddressAsync(EstablishmentAddressForCreationRequest request);
 
     Task<Result<EstablishmentAddressResponse>> UpdateEstablishmentAddressAsync(
         EstablishmentAddressId establishmentAddressId,
@@ -27,4 +27,3 @@ public interface IEstablishmentAddressService
 
     Task<Result<int>> CountAsync(ISpecification<EstablishmentAddress> spec);
 }
-

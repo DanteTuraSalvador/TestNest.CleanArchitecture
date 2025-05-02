@@ -18,7 +18,6 @@ using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Application.Services;
 
-
 public class EstablishmentContactService(
     IEstablishmentContactRepository establishmentContactRepository,
     IEstablishmentRepository establishmentRepository,

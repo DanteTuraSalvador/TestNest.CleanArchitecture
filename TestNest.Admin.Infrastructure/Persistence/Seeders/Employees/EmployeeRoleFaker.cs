@@ -1,7 +1,7 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.Employees;
-using TestNest.Admin.SharedLibrary.ValueObjects;
 using TestNest.Admin.SharedLibrary.Common.Results;
+using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.Employees;
 
@@ -11,7 +11,7 @@ public sealed class EmployeeRoleFaker : Faker<EmployeeRole>
     {
         _ = CustomInstantiator(f =>
         {
-            for (int i = 0; i < 5; i++) 
+            for (int i = 0; i < 5; i++)
             {
                 RoleName roleName = GenerateValidRoleName(f);
                 Result<EmployeeRole> result = EmployeeRole.Create(roleName);
@@ -23,7 +23,6 @@ public sealed class EmployeeRoleFaker : Faker<EmployeeRole>
             }
             return EmployeeRole.Empty();
         });
-
 
         _ = FinishWith((f, role) =>
         {

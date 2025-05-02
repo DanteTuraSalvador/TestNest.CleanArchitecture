@@ -1,12 +1,13 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.Establishments;
-using TestNest.Admin.SharedLibrary.ValueObjects;
 using TestNest.Admin.SharedLibrary.Common.Results;
+using TestNest.Admin.SharedLibrary.ValueObjects;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.EstablishmentPhones;
+
 public sealed class EstablishmentPhoneFaker : Faker<EstablishmentPhone>
 {
-    public EstablishmentPhoneFaker(List<Establishment> establishments) 
+    public EstablishmentPhoneFaker(List<Establishment> establishments)
         => CustomInstantiator(f =>
             {
                 Establishment establishment = f.PickRandom(establishments);

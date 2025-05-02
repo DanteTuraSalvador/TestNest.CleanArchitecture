@@ -21,8 +21,9 @@ public sealed class EstablishmentSocialMedia : BaseEntity<EstablishmentSocialMed
     // empty object
     private static readonly Lazy<EstablishmentSocialMedia> _empty = new(()
         => new EstablishmentSocialMedia());
-
     public static EstablishmentSocialMedia Empty() => _empty.Value;
+    public bool IsEmpty() => this == Empty(); 
+    
 
     // navigation properties
     public Establishment Establishment { get; private set; } = default!;
@@ -51,11 +52,11 @@ public sealed class EstablishmentSocialMedia : BaseEntity<EstablishmentSocialMed
     {
         var result = Result.Combine(
             Guard.AgainstCondition(establishmentId == EstablishmentId.Empty(),
-                () => StronglyTypedIdException.NullId()),
+                static () => StronglyTypedIdException.NullId()),
             Guard.AgainstCondition(socialMediaId == SocialMediaId.Empty(),
-                () => StronglyTypedIdException.NullId()),
+                static () => StronglyTypedIdException.NullId()),
             Guard.AgainstCondition(socialMediaAccountName.IsEmpty(),
-                () => SocialMediaAccountNameException.EmptyAccountName())
+                static () => SocialMediaAccountNameException.EmptyAccountName())
         );
 
         return result.IsSuccess
@@ -70,8 +71,8 @@ public sealed class EstablishmentSocialMedia : BaseEntity<EstablishmentSocialMed
     // factory methods for updating properties
     public Result<EstablishmentSocialMedia> WithSocialMediaId(SocialMediaId newSocialMediaId)
     {
-        var result = Guard.AgainstCondition(newSocialMediaId == SocialMediaId.Empty(),
-            () => StronglyTypedIdException.NullId());
+        Result result = Guard.AgainstCondition(newSocialMediaId == SocialMediaId.Empty(),
+           static () => StronglyTypedIdException.NullId());
 
         return result.IsSuccess
             ? Result<EstablishmentSocialMedia>.Success(new EstablishmentSocialMedia(
@@ -84,8 +85,8 @@ public sealed class EstablishmentSocialMedia : BaseEntity<EstablishmentSocialMed
 
     public Result<EstablishmentSocialMedia> WithSocialMediaAccountName(SocialMediaAccountName newAccountName)
     {
-        var result = Guard.AgainstCondition(newAccountName.IsEmpty(),
-            () => SocialMediaAccountNameException.EmptyAccountName());
+        Result result = Guard.AgainstCondition(newAccountName.IsEmpty(),
+            static () => SocialMediaAccountNameException.EmptyAccountName());
 
         return result.IsSuccess
             ? Result<EstablishmentSocialMedia>.Success(new EstablishmentSocialMedia(
@@ -96,8 +97,7 @@ public sealed class EstablishmentSocialMedia : BaseEntity<EstablishmentSocialMed
             : Result<EstablishmentSocialMedia>.Failure(ErrorType.Validation, result.Errors);
     }
 
-    // helper methods
-    public string GetFullSocialMediaLink(SocialMediaPlatform socialMedia)
-        => string.IsNullOrWhiteSpace(socialMedia?.SocialMediaName.PlatformURL) ? string.Empty
-            : $"{socialMedia.SocialMediaName.PlatformURL}{SocialMediaAccountName.AccountName}";
+    public string GetFullSocialMediaLink()
+      => string.IsNullOrWhiteSpace(SocialMedia?.SocialMediaName?.PlatformURL) ? string.Empty
+          : $"{SocialMedia.SocialMediaName.PlatformURL}{SocialMediaAccountName.AccountName}";
 }

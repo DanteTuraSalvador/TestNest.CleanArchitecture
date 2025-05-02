@@ -86,6 +86,4 @@ public static class EntityToDtoMapper
         MemberDescription = member.MemberDescription.Description,
         MemberTag = member.MemberTag.Tag
     };
-
 }
-

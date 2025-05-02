@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders;
+
 public static class DatabaseSeeder
 {
     public static void SeedWithRetry(IServiceProvider serviceProvider, int maxRetries = 3)

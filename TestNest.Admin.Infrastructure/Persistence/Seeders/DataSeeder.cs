@@ -12,7 +12,6 @@ namespace TestNest.Admin.Infrastructure.Persistence.Seeders;
 
 public static class DataSeeder
 {
-
     public static void SeedEstablishments(
     ApplicationDbContext context,
     int numberOfEstablishments = 20)
@@ -38,7 +37,6 @@ public static class DataSeeder
             Console.WriteLine($"Successfully seeded {establishments.Count} valid establishments");
         }
     }
-
 
     public static void TestFakerSuccessRate()
     {
@@ -98,7 +96,6 @@ public static class DataSeeder
             _ = context.SaveChanges();
         }
     }
-
 
     public static void SeedSocialMediaPlatforms(
         ApplicationDbContext context,
@@ -182,8 +179,6 @@ public static class DataSeeder
             _ = context.SaveChanges();
         }
     }
-
-
 
     public static void SeedEstablishmentPhones(
         ApplicationDbContext context,

@@ -6,9 +6,6 @@ namespace TestNest.Admin.SharedLibrary.ValueObjects;
 
 public sealed class PhoneNumber : ValueObject
 {
-
-
-
     private static readonly Regex PhoneRegex = new(@"^\+?\d{7,15}$", RegexOptions.Compiled);
 
     private static readonly Lazy<PhoneNumber> _empty = new(() => new PhoneNumber());
@@ -55,6 +52,4 @@ public sealed class PhoneNumber : ValueObject
     public string GetFormatted() => PhoneNo.StartsWith("+") ? PhoneNo : $"+{PhoneNo}";
 
     public override string ToString() => GetFormatted();
-
-   
 }

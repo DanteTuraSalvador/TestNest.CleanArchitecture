@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using TestNest.Admin.API.Helpers;
 using TestNest.Admin.Application.Contracts.Interfaces.Service;
 using TestNest.Admin.Application.Specifications.EmployeeSpecifications;
-using TestNest.Admin.Domain.Employees;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Paginations;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.Employee;
@@ -11,7 +10,6 @@ using TestNest.Admin.SharedLibrary.Dtos.Responses;
 using TestNest.Admin.SharedLibrary.Exceptions;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
 using TestNest.Admin.SharedLibrary.StronglyTypeIds;
-using TestNest.Admin.Application.Mappings;
 
 namespace TestNest.Admin.API.Controllers;
 
@@ -350,23 +348,23 @@ public class EmployeesController(
 
         return errorType switch
         {
-        ErrorType.Validation =>
-            _errorResponseService.CreateProblemDetails(
-                StatusCodes.Status400BadRequest,
-                "Validation Error", "Validation failed.",
-                new Dictionary<string, object> { { "errors", safeErrors } }),
+            ErrorType.Validation =>
+                _errorResponseService.CreateProblemDetails(
+                    StatusCodes.Status400BadRequest,
+                    "Validation Error", "Validation failed.",
+                    new Dictionary<string, object> { { "errors", safeErrors } }),
 
-        ErrorType.NotFound =>
-            _errorResponseService.CreateProblemDetails(
-                StatusCodes.Status404NotFound,
-                "Not Found", "Resource not found.",
-                new Dictionary<string, object> { { "errors", safeErrors } }),
+            ErrorType.NotFound =>
+                _errorResponseService.CreateProblemDetails(
+                    StatusCodes.Status404NotFound,
+                    "Not Found", "Resource not found.",
+                    new Dictionary<string, object> { { "errors", safeErrors } }),
 
-        ErrorType.Conflict =>
-            _errorResponseService.CreateProblemDetails(
-                StatusCodes.Status409Conflict,
-                "Conflict", "Resource conflict.",
-                new Dictionary<string, object> { { "errors", safeErrors } }),
+            ErrorType.Conflict =>
+                _errorResponseService.CreateProblemDetails(
+                    StatusCodes.Status409Conflict,
+                    "Conflict", "Resource conflict.",
+                    new Dictionary<string, object> { { "errors", safeErrors } }),
 
             _ => _errorResponseService.CreateProblemDetails(
                        StatusCodes.Status500InternalServerError,
@@ -374,4 +372,3 @@ public class EmployeesController(
         };
     }
 }
-

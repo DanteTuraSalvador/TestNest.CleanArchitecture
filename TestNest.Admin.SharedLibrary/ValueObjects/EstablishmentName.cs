@@ -4,11 +4,10 @@ using TestNest.Admin.SharedLibrary.ValueObjects.Common;
 
 namespace TestNest.Admin.SharedLibrary.ValueObjects;
 
-public sealed partial class EstablishmentName : ValueObject
+public sealed class EstablishmentName : ValueObject
 {
-    [GeneratedRegex(@"^[\p{L}0-9\s&,.'-]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private static partial Regex EstablishmentNamePattern();
-    private static readonly Regex ValidPattern = EstablishmentNamePattern();
+    private static readonly Regex ValidPattern = new(@"^[\p{L}0-9\s&,.'-]+$", RegexOptions.Compiled);
+
     private static readonly Lazy<EstablishmentName> _empty = new(() => new EstablishmentName());
     public string Name { get; }
 

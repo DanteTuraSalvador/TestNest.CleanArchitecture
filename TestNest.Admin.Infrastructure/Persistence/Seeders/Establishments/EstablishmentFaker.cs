@@ -1,15 +1,14 @@
 ﻿using Bogus;
 using TestNest.Admin.Domain.Establishments;
-using TestNest.Admin.SharedLibrary.ValueObjects;
-using TestNest.Admin.SharedLibrary.ValueObjects.Enums;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
+using TestNest.Admin.SharedLibrary.ValueObjects;
+using TestNest.Admin.SharedLibrary.ValueObjects.Enums;
 
 namespace TestNest.Admin.Infrastructure.Persistence.Seeders.Establishments;
 
 public sealed class EstablishmentFaker : Faker<Establishment>
 {
-
     public EstablishmentFaker() => CustomInstantiator(f =>
     {
         var result = Establishment.Empty();

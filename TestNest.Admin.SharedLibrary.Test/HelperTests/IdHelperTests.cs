@@ -11,69 +11,56 @@ public class IdHelperTests
     [Fact]
     public void ValidateAndCreateId_ValidGuidString_ReturnsSuccessResultWithId()
     {
-        // Arrange
-        var validGuidString = Guid.NewGuid().ToString();
+        string validGuidString = Guid.NewGuid().ToString();
 
-        // Act
-        var result = IdHelper.ValidateAndCreateId<TestId>(validGuidString);
+        Result<TestId> result = IdHelper.ValidateAndCreateId<TestId>(validGuidString);
 
-        // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(Guid.Parse(validGuidString), result.Value.Value);
+        Assert.Equal(Guid.Parse(validGuidString), result.Value!.Value);
     }
 
     [Fact]
     public void ValidateAndCreateId_InvalidGuidString_ReturnsFailureResultWithInvalidGuidError()
     {
-        // Arrange
-        var invalidGuidString = "not-a-guid";
+        string invalidGuidString = "not-a-guid";
 
-        // Act
-        var result = IdHelper.ValidateAndCreateId<TestId>(invalidGuidString);
+        Result<TestId> result = IdHelper.ValidateAndCreateId<TestId>(invalidGuidString);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal(IdHelper.InvalidGuidFormatErrorCode, result.Errors.First().Code);
-        Assert.Equal(IdValidationException.InvalidGuidFormat().Message, result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal(IdHelper.InvalidGuidFormatErrorCode, result.Errors[0].Code);
+        Assert.Equal(IdValidationException.InvalidGuidFormat().Message, result.Errors[0].Message);
     }
 
     [Fact]
     public void ValidateAndCreateId_EmptyGuidString_ReturnsFailureResultWithNullIdErrorFromCreateMethod()
     {
-        // Arrange
-        var emptyGuidString = Guid.Empty.ToString();
+        string emptyGuidString = Guid.Empty.ToString();
 
-        // Act
-        var result = IdHelper.ValidateAndCreateId<TestId>(emptyGuidString);
+        Result<TestId> result = IdHelper.ValidateAndCreateId<TestId>(emptyGuidString);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal(StronglyTypedIdException.ErrorCode.NullId.ToString(), result.Errors.First().Code);
-        Assert.Equal(StronglyTypedIdException.NullId().Message, result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal(StronglyTypedIdException.ErrorCode.NullId.ToString(), result.Errors[0].Code);
+        Assert.Equal(StronglyTypedIdException.NullId().Message, result.Errors[0].Message);
     }
 
     [Fact]
     public void ValidateAndCreateId_NonExistentCreateMethod_ReturnsFailureResultWithCreateMethodNotFoundError()
     {
-        // Arrange
-        var validGuidString = Guid.NewGuid().ToString();
+        string validGuidString = Guid.NewGuid().ToString();
 
-        // Act
-        var result = IdHelper.ValidateAndCreateId<TestIdWithoutCreate>(validGuidString);
+        Result<TestIdWithoutCreate> result = IdHelper.ValidateAndCreateId<TestIdWithoutCreate>(validGuidString);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Internal, result.ErrorType);
-        Assert.Single(result.Errors);
-        Assert.Equal(IdHelper.CreateMethodNotFoundErrorCode, result.Errors.First().Code);
-        Assert.Equal($"Create method not found for {typeof(TestIdWithoutCreate).Name}.", result.Errors.First().Message);
+        _ = Assert.Single(result.Errors);
+        Assert.Equal(IdHelper.CreateMethodNotFoundErrorCode, result.Errors[0].Code);
+        Assert.Equal($"Create method not found for {nameof(TestIdWithoutCreate)}.", result.Errors[0].Message);
     }
 
-    // Helper class for testing
     private sealed record TestId(Guid Value) : StronglyTypedId<TestId>(Value)
     {
         public static Result<TestId> Create(Guid value)
@@ -88,6 +75,5 @@ public class IdHelperTests
         }
     }
 
-    // Helper class without a static Create method for testing
     private sealed record TestIdWithoutCreate(Guid Value) : StronglyTypedId<TestIdWithoutCreate>(Value);
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using TestNest.Admin.API.Helpers;
 using TestNest.Admin.Application.Contracts.Interfaces.Service;
 using TestNest.Admin.Application.Specifications.EstablishmentSpecifications;
-using TestNest.Admin.Domain.Establishments;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Paginations;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.Establishment;
@@ -11,10 +10,8 @@ using TestNest.Admin.SharedLibrary.Dtos.Responses.Establishments;
 using TestNest.Admin.SharedLibrary.Exceptions;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
 using TestNest.Admin.SharedLibrary.StronglyTypeIds;
-using TestNest.Admin.Application.Mappings;
 
 namespace TestNest.Admin.API.Controllers;
-
 
 [ApiController]
 [Route("api/[controller]")]
@@ -45,7 +42,7 @@ public class EstablishmentsController(
 
         if (result.IsSuccess)
         {
-            EstablishmentResponse? dto = result.Value; 
+            EstablishmentResponse? dto = result.Value;
             return CreatedAtAction(
                 nameof(GetAllEstablishments),
                 new { establishmentId = dto!.EstablishmentId },
@@ -91,7 +88,7 @@ public class EstablishmentsController(
 
         if (updatedEstablishment.IsSuccess)
         {
-            return Ok(updatedEstablishment.Value!); 
+            return Ok(updatedEstablishment.Value!);
         }
 
         return HandleErrorResponse(

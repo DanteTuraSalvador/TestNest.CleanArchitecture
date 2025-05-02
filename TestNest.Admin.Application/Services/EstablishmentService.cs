@@ -20,7 +20,6 @@ using TestNest.Admin.SharedLibrary.ValueObjects.Enums;
 
 namespace TestNest.Admin.Application.Services;
 
-
 public class EstablishmentService(
     IEstablishmentRepository establishmentRepository,
     IUnitOfWork unitOfWork,

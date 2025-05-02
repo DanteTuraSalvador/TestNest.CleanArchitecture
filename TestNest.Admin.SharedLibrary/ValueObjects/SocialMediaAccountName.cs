@@ -20,7 +20,7 @@ public sealed class SocialMediaAccountName : ValueObject
 
     public static Result<SocialMediaAccountName> Create(string accountName)
     {
-        var validationResult = ValidateSocialMediaAccountName(accountName);
+        Result validationResult = ValidateSocialMediaAccountName(accountName);
         return validationResult.IsSuccess
             ? Result<SocialMediaAccountName>.Success(new SocialMediaAccountName(accountName!))
             : Result<SocialMediaAccountName>.Failure(ErrorType.Validation, validationResult.Errors);
@@ -31,14 +31,16 @@ public sealed class SocialMediaAccountName : ValueObject
 
     private static Result ValidateSocialMediaAccountName(string accountName)
     {
-        var resultNull = Guard.AgainstNull(accountName, () => SocialMediaAccountNameException.NullSocialMediaAccountName());
+        Result resultNull = Guard.AgainstNull(accountName, static () => SocialMediaAccountNameException.NullSocialMediaAccountName());
         if (!resultNull.IsSuccess)
+        {
             return Result.Failure(ErrorType.Validation, resultNull.Errors);
+        }
 
         return Result.Combine(
-            Guard.AgainstNullOrWhiteSpace(accountName, () => SocialMediaAccountNameException.EmptyAccountName()),
-            Guard.AgainstRange(accountName.Length, 3, 50, () => SocialMediaAccountNameException.InvalidLength()),
-            Guard.AgainstCondition(accountName != null && !pattern.IsMatch(accountName), () => SocialMediaAccountNameException.InvalidCharacters())
+            Guard.AgainstNullOrWhiteSpace(accountName, static () => SocialMediaAccountNameException.EmptyAccountName()),
+            Guard.AgainstRange(accountName.Length, 3, 50, static () => SocialMediaAccountNameException.InvalidLength()),
+            Guard.AgainstCondition(accountName != null && !pattern.IsMatch(accountName), static () => SocialMediaAccountNameException.InvalidCharacters())
         );
     }
 

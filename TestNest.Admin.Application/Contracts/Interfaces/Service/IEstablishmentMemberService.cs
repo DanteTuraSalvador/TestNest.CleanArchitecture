@@ -19,7 +19,7 @@ public interface IEstablishmentMemberService
 
     Task<Result> DeleteEstablishmentMemberAsync(EstablishmentMemberId establishmentMemberId);
 
-    Task<Result<IEnumerable<EstablishmentMemberResponse>>> ListAsync(ISpecification<EstablishmentMember> spec); 
+    Task<Result<IEnumerable<EstablishmentMemberResponse>>> ListAsync(ISpecification<EstablishmentMember> spec);
 
     Task<Result<int>> CountAsync(ISpecification<EstablishmentMember> spec);
 

@@ -22,7 +22,9 @@ public sealed class EstablishmentMember : BaseEntity<EstablishmentMemberId>
 
     // empty object
     private static readonly Lazy<EstablishmentMember> _empty = new(() => new EstablishmentMember());
+
     public bool IsEmpty() => this == Empty();
+
     public static EstablishmentMember Empty() => _empty.Value;
 
     // navigation properties

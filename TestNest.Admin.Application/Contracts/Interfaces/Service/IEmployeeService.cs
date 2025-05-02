@@ -6,7 +6,6 @@ using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 
 namespace TestNest.Admin.Application.Contracts.Interfaces.Service;
 
-
 public interface IEmployeeService
 {
     Task<Result<EmployeeResponse>> CreateEmployeeAsync(EmployeeForCreationRequest employeeForCreationRequest);
@@ -23,4 +22,3 @@ public interface IEmployeeService
 
     Task<Result<int>> CountAsync(EmployeeSpecification spec);
 }
-

@@ -8,7 +8,6 @@ public sealed class RoleName : ValueObject
 {
     private static readonly Regex DefaultPattern = new(@"^[A-Za-z0-9 &'_-]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-
     public bool IsEmpty() => this == Empty();
 
     private static readonly Lazy<RoleName> _empty = new(() => new RoleName());

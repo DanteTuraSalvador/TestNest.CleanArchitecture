@@ -4,13 +4,13 @@ using TestNest.Admin.Application.Contracts.Common;
 using TestNest.Admin.Application.Contracts.Interfaces.Persistence;
 using TestNest.Admin.Application.Contracts.Interfaces.Service;
 using TestNest.Admin.Application.Interfaces;
-using TestNest.Admin.Application.Mappings; 
+using TestNest.Admin.Application.Mappings;
 using TestNest.Admin.Application.Services.Base;
 using TestNest.Admin.Application.Specifications.Common;
 using TestNest.Admin.Domain.SocialMedias;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.SocialMediaPlatform;
-using TestNest.Admin.SharedLibrary.Dtos.Responses; 
+using TestNest.Admin.SharedLibrary.Dtos.Responses;
 using TestNest.Admin.SharedLibrary.Exceptions;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
 using TestNest.Admin.SharedLibrary.StronglyTypeIds;
@@ -160,6 +160,7 @@ public class SocialMediaPlatformService(
         }
         return Result.Failure(commitResult.ErrorType, commitResult.Errors);
     }
+
     public async Task<Result<SocialMediaPlatformResponse>> GetSocialMediaPlatformByIdAsync(SocialMediaId socialMediaId)
     {
         Result<SocialMediaPlatform> platformResult = await _socialMediaRepository.GetByIdAsync(socialMediaId);

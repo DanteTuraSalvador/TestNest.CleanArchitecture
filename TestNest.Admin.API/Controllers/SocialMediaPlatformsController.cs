@@ -1,10 +1,7 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TestNest.Admin.API.Helpers;
 using TestNest.Admin.Application.Contracts.Interfaces.Service;
-using TestNest.Admin.Application.Mappings; 
 using TestNest.Admin.Application.Specifications.SoicalMediaPlatfomrSpecifications;
-using TestNest.Admin.Domain.SocialMedias;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Paginations;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.SocialMediaPlatform;
