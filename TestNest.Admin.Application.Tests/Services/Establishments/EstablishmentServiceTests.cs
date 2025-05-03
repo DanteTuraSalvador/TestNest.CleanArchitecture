@@ -157,28 +157,30 @@ public class EstablishmentServiceTests
             EstablishmentEmail = "test@example.com"
         };
 
-        var establishmentName = EstablishmentName.Create(creationRequest.EstablishmentName).Value!;
-        var establishmentEmail = EmailAddress.Create(creationRequest.EstablishmentEmail).Value!;
-        var newEstablishmentResult = Establishment.Create(establishmentName, establishmentEmail);
+        EstablishmentName establishmentName = EstablishmentName.Create(creationRequest.EstablishmentName).Value!;
+        EmailAddress establishmentEmail = EmailAddress.Create(creationRequest.EstablishmentEmail).Value!;
+        Result<Establishment> newEstablishmentResult = Establishment.Create(establishmentName, establishmentEmail);
         Assert.True(newEstablishmentResult.IsSuccess);
-        var newEstablishment = newEstablishmentResult.Value!;
+        Establishment newEstablishment = newEstablishmentResult.Value!;
 
-        _ = _mockEstablishmentRepository.Setup(repo => repo.ExistsWithNameAndEmailAsync(establishmentName, establishmentEmail, It.IsAny<EstablishmentId?>())).ReturnsAsync(false);
-        _ = _mockEstablishmentRepository.Setup(repo => repo.AddAsync(It.IsAny<Establishment>())).ReturnsAsync(Result<Establishment>.Failure(ErrorType.Database, new Error("DatabaseError", "Failed to add establishment."))); // Simulate repository failure
+        _ = _mockEstablishmentRepository.Setup(repo => repo.ExistsWithNameAndEmailAsync(establishmentName, establishmentEmail, 
+                It.IsAny<EstablishmentId?>())).ReturnsAsync(false);
+        _ = _mockEstablishmentRepository.Setup(repo => repo.AddAsync(
+            It.IsAny<Establishment>()))
+                .ReturnsAsync(Result<Establishment>.Failure(ErrorType.Database, new Error("DatabaseError", "Failed to add establishment.")));
 
-        // Mock SaveChangesAsync to throw a DbUpdateException
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ThrowsAsync(new DbUpdateException("Error saving changes."));
 
-        _mockExceptionHandlerFactory.Setup(factory => factory.HandleDbUpdateException(It.IsAny<DbUpdateException>()))
+        _ = _mockExceptionHandlerFactory.Setup(factory => factory.HandleDbUpdateException(It.IsAny<DbUpdateException>()))
             .Returns(Result.Failure(ErrorType.Database, new Error("DbUpdateError", "Error saving changes.")));
 
         // Act
-        var result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
+        Result<EstablishmentResponse> result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorType.Database, result.ErrorType); // Expect the error handled from the DbUpdateException
+        Assert.Equal(ErrorType.Database, result.ErrorType);
 
         _mockEstablishmentRepository.Verify(repo => repo.ExistsWithNameAndEmailAsync(establishmentName, establishmentEmail, It.IsAny<EstablishmentId?>()), Times.Once);
         _mockEstablishmentRepository.Verify(repo => repo.AddAsync(It.IsAny<Establishment>()), Times.Once);
@@ -195,24 +197,23 @@ public class EstablishmentServiceTests
             EstablishmentEmail = "test@example.com"
         };
 
-        var establishmentName = EstablishmentName.Create(creationRequest.EstablishmentName).Value!;
-        var establishmentEmail = EmailAddress.Create(creationRequest.EstablishmentEmail).Value!;
-        var newEstablishmentResult = Establishment.Create(establishmentName, establishmentEmail);
+        EstablishmentName establishmentName = EstablishmentName.Create(creationRequest.EstablishmentName).Value!;
+        EmailAddress establishmentEmail = EmailAddress.Create(creationRequest.EstablishmentEmail).Value!;
+        Result<Establishment> newEstablishmentResult = Establishment.Create(establishmentName, establishmentEmail);
         Assert.True(newEstablishmentResult.IsSuccess);
-        var newEstablishment = newEstablishmentResult.Value!;
+        Establishment newEstablishment = newEstablishmentResult.Value!;
 
         _ = _mockEstablishmentRepository.Setup(repo => repo.ExistsWithNameAndEmailAsync(establishmentName, establishmentEmail, It.IsAny<EstablishmentId?>())).ReturnsAsync(false);
-        _ = _mockEstablishmentRepository.Setup(repo => repo.AddAsync(It.IsAny<Establishment>())).ReturnsAsync(Result<Establishment>.Success(newEstablishment)); // Simulate successful add
+        _ = _mockEstablishmentRepository.Setup(repo => repo.AddAsync(It.IsAny<Establishment>())).ReturnsAsync(Result<Establishment>.Success(newEstablishment));
 
-        // Mock SaveChangesAsync to throw a DbUpdateException
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ThrowsAsync(new DbUpdateException("Error during commit."));
 
-        _mockExceptionHandlerFactory.Setup(factory => factory.HandleDbUpdateException(It.IsAny<DbUpdateException>()))
+        _ = _mockExceptionHandlerFactory.Setup(factory => factory.HandleDbUpdateException(It.IsAny<DbUpdateException>()))
             .Returns(Result.Failure(ErrorType.Database, new Error("DbUpdateError", "Error during commit.")));
 
         // Act
-        var result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
+        Result<EstablishmentResponse> result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -230,18 +231,18 @@ public class EstablishmentServiceTests
         // Arrange
         var creationRequest = new EstablishmentForCreationRequest
         {
-            EstablishmentName = "", // Invalid empty name
-            EstablishmentEmail = "invalid-email" // Invalid email format
+            EstablishmentName = "",
+            EstablishmentEmail = "invalid-email"
         };
 
         // Act
-        var result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
+        Result<EstablishmentResponse> result = await _establishmentService.CreateEstablishmentAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
 
-        Assert.NotEmpty(result.Errors); // Assert that there are errors
+        Assert.NotEmpty(result.Errors);
 
         _mockEstablishmentRepository.Verify(repo => repo.ExistsWithNameAndEmailAsync(It.IsAny<EstablishmentName>(), It.IsAny<EmailAddress>(), It.IsAny<EstablishmentId?>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.AddAsync(It.IsAny<Establishment>()), Times.Never);
@@ -252,21 +253,21 @@ public class EstablishmentServiceTests
     {
         // Arrange
         var establishmentId = new EstablishmentId();
-        var existingEstablishmentResult = Establishment.Create(
+        Result<Establishment> existingEstablishmentResult = Establishment.Create(
             EstablishmentName.Create("Existing Establishment").Value!,
             EmailAddress.Create("existing@example.com").Value!
         );
         Assert.True(existingEstablishmentResult.IsSuccess);
-        var existingEstablishment = existingEstablishmentResult.Value!;
+        Establishment existingEstablishment = existingEstablishmentResult.Value!;
 
         _ = _mockEstablishmentRepository.Setup(repo => repo.GetByIdAsync(establishmentId)).ReturnsAsync(Result<Establishment>.Success(existingEstablishment));
 
         // Act
-        var result = await _establishmentService.GetEstablishmentByIdAsync(establishmentId);
+        Result<EstablishmentResponse> result = await _establishmentService.GetEstablishmentByIdAsync(establishmentId);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.IsType<EstablishmentResponse>(result.Value);
+        _ = Assert.IsType<EstablishmentResponse>(result.Value);
         Assert.NotNull(result.Value!.EstablishmentId);
         Assert.NotNull(result.Value!.EstablishmentName);
         Assert.NotNull(result.Value!.EstablishmentEmail);
@@ -282,7 +283,7 @@ public class EstablishmentServiceTests
         _ = _mockEstablishmentRepository.Setup(repo => repo.GetByIdAsync(nonExistingId)).ReturnsAsync(Result<Establishment>.Failure(ErrorType.NotFound, new Error("NotFound", "Establishment not found.")));
 
         // Act
-        var result = await _establishmentService.GetEstablishmentByIdAsync(nonExistingId);
+        Result<EstablishmentResponse> result = await _establishmentService.GetEstablishmentByIdAsync(nonExistingId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -300,7 +301,7 @@ public class EstablishmentServiceTests
         _ = _mockEstablishmentRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<Establishment>>())).ReturnsAsync(Result<IEnumerable<Establishment>>.Success(emptyList));
 
         // Act
-        var result = await _establishmentService.GetEstablishmentsAsync(null); // Passing null for no specific filter
+        Result<IEnumerable<EstablishmentResponse>> result = await _establishmentService.GetEstablishmentsAsync(null);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -314,13 +315,13 @@ public class EstablishmentServiceTests
     public async Task GetEstablishmentsAsync_SomeEstablishments_ReturnsSuccessWithMappedList()
     {
         // Arrange
-        var establishment1Result = Establishment.Create(EstablishmentName.Create("Test 1").Value!, EmailAddress.Create("test1@example.com").Value!);
+        Result<Establishment> establishment1Result = Establishment.Create(EstablishmentName.Create("Test 1").Value!, EmailAddress.Create("test1@example.com").Value!);
         Assert.True(establishment1Result.IsSuccess);
-        var establishment1 = establishment1Result.Value!;
+        Establishment establishment1 = establishment1Result.Value!;
 
-        var establishment2Result = Establishment.Create(EstablishmentName.Create("Test 2").Value!, EmailAddress.Create("test2@example.com").Value!);
+        Result<Establishment> establishment2Result = Establishment.Create(EstablishmentName.Create("Test 2").Value!, EmailAddress.Create("test2@example.com").Value!);
         Assert.True(establishment2Result.IsSuccess);
-        var establishment2 = establishment2Result.Value!;
+        Establishment establishment2 = establishment2Result.Value!;
 
         var establishments = new List<Establishment> { establishment1, establishment2 };
 
@@ -359,7 +360,7 @@ public class EstablishmentServiceTests
         _ = _mockEstablishmentRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<Establishment>>())).ReturnsAsync(Result<IEnumerable<Establishment>>.Failure(ErrorType.Database, new List<Error> { databaseError }));
 
         // Act
-        var result = await _establishmentService.GetEstablishmentsAsync(null);
+        Result<IEnumerable<EstablishmentResponse>> result = await _establishmentService.GetEstablishmentsAsync(null);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -374,45 +375,45 @@ public class EstablishmentServiceTests
     public async Task UpdateEstablishmentAsync_ValidInput_ReturnsSuccessWithUpdatedResponse()
     {
         // Arrange
-        var creationResult = Establishment.Create(
+        Result<Establishment> creationResult = Establishment.Create(
             EstablishmentName.Create("Existing Name").Value!,
             EmailAddress.Create("existing@example.com").Value!
         );
         Assert.True(creationResult.IsSuccess);
-        var existingEstablishment = creationResult.Value!;
-        var establishmentId = existingEstablishment.Id; // Capture the generated ID
+        Establishment existingEstablishment = creationResult.Value!;
+        EstablishmentId establishmentId = existingEstablishment.Id;
 
         var updateRequest = new EstablishmentForUpdateRequest
         {
             EstablishmentName = "Updated Name",
             EstablishmentEmail = "updated@example.com",
-            EstablishmentStatusId = 2 // Assuming 2 is a valid status ID
+            EstablishmentStatusId = 2
         };
 
-        var updatedNameResult = EstablishmentName.Create(updateRequest.EstablishmentName);
+        Result<EstablishmentName> updatedNameResult = EstablishmentName.Create(updateRequest.EstablishmentName);
         Assert.True(updatedNameResult.IsSuccess);
-        var updatedName = updatedNameResult.Value!;
+        EstablishmentName updatedName = updatedNameResult.Value!;
 
-        var updatedEmailResult = EmailAddress.Create(updateRequest.EstablishmentEmail);
+        Result<EmailAddress> updatedEmailResult = EmailAddress.Create(updateRequest.EstablishmentEmail);
         Assert.True(updatedEmailResult.IsSuccess);
-        var updatedEmail = updatedEmailResult.Value!;
+        EmailAddress updatedEmail = updatedEmailResult.Value!;
 
-        var updatedStatusResult = EstablishmentStatus.FromId(updateRequest.EstablishmentStatusId);
+        Result<EstablishmentStatus> updatedStatusResult = EstablishmentStatus.FromId(updateRequest.EstablishmentStatusId);
         Assert.True(updatedStatusResult.IsSuccess);
-        var updatedStatus = updatedStatusResult.Value!;
+        EstablishmentStatus updatedStatus = updatedStatusResult.Value!;
 
         _ = _mockEstablishmentRepository.Setup(repo => repo.GetByIdAsync(establishmentId)).ReturnsAsync(Result<Establishment>.Success(existingEstablishment));
-        _ = _mockEstablishmentRepository.Setup(repo => repo.ExistsWithNameAndEmailAsync(updatedName, updatedEmail, establishmentId)).ReturnsAsync(false); // Ensure uniqueness check passes
+        _ = _mockEstablishmentRepository.Setup(repo => repo.ExistsWithNameAndEmailAsync(updatedName, updatedEmail, establishmentId)).ReturnsAsync(false); 
         _ = _mockEstablishmentRepository.Setup(repo => repo.UpdateAsync(It.IsAny<Establishment>())).ReturnsAsync(Result<Establishment>.Success(existingEstablishment));
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
 
         // Act
-        var result = await _establishmentService.UpdateEstablishmentAsync(establishmentId, updateRequest);
+        Result<EstablishmentResponse> result = await _establishmentService.UpdateEstablishmentAsync(establishmentId, updateRequest);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.IsType<EstablishmentResponse>(result.Value);
+        _ = Assert.IsType<EstablishmentResponse>(result.Value);
         Assert.Equal(establishmentId.Value.ToString(), result.Value!.EstablishmentId);
         Assert.Equal(updateRequest.EstablishmentName, result.Value!.EstablishmentName);
         Assert.Equal(updateRequest.EstablishmentEmail, result.Value!.EstablishmentEmail);
@@ -439,7 +440,7 @@ public class EstablishmentServiceTests
         _ = _mockEstablishmentRepository.Setup(repo => repo.GetByIdAsync(nonExistingId)).ReturnsAsync(Result<Establishment>.Failure(ErrorType.NotFound, new Error("NotFound", "Establishment not found.")));
 
         // Act
-        var result = await _establishmentService.UpdateEstablishmentAsync(nonExistingId, updateRequest);
+        Result<EstablishmentResponse> result = await _establishmentService.UpdateEstablishmentAsync(nonExistingId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);

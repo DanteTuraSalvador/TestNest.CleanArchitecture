@@ -7,8 +7,8 @@ using TestNest.Admin.Application.Services;
 using TestNest.Admin.Domain.Establishments;
 using TestNest.Admin.SharedLibrary.Common.Results;
 using TestNest.Admin.SharedLibrary.Dtos.Requests.Establishment;
+using TestNest.Admin.SharedLibrary.Dtos.Responses.Establishments;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
-using TestNest.Admin.SharedLibrary.Helpers;
 using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 using TestNest.Admin.SharedLibrary.ValueObjects;
 
@@ -47,14 +47,14 @@ public class EstablishmentAddressServiceTests
         // Arrange
         var invalidRequest = new EstablishmentAddressForCreationRequest
         {
-            EstablishmentId = "invalid-guid", // Invalid ID format
-            AddressLine = "", // Required field
-            Latitude = 200, // Invalid latitude
-            Longitude = -200 // Invalid longitude
+            EstablishmentId = "invalid-guid",
+            AddressLine = "",
+            Latitude = 200,
+            Longitude = -200
         };
 
         // Act
-        var result = await _service.CreateEstablishmentAddressAsync(invalidRequest);
+        Result<EstablishmentAddressResponse> result = await _service.CreateEstablishmentAddressAsync(invalidRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -76,8 +76,7 @@ public class EstablishmentAddressServiceTests
             IsPrimary = true
         };
 
-        // Mock duplicate check
-        _mockEstablishmentAddressRepository
+        _ = _mockEstablishmentAddressRepository
             .Setup(repo => repo.AddressExistsWithSameCoordinatesInEstablishment(
                 It.IsAny<EstablishmentAddressId>(),
                 40.7128m,
@@ -87,7 +86,7 @@ public class EstablishmentAddressServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _service.CreateEstablishmentAddressAsync(validRequest);
+        Result<EstablishmentAddressResponse> result = await _service.CreateEstablishmentAddressAsync(validRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -108,8 +107,7 @@ public class EstablishmentAddressServiceTests
             Longitude = -74.0060
         };
 
-        // Mock establishment not found
-        _mockEstablishmentRepository
+        _ = _mockEstablishmentRepository
             .Setup(repo => repo.GetByIdAsync(It.IsAny<EstablishmentId>()))
             .ReturnsAsync(Result<Establishment>.Failure(
                 ErrorType.NotFound,
@@ -117,7 +115,7 @@ public class EstablishmentAddressServiceTests
             ));
 
         // Act
-        var result = await _service.CreateEstablishmentAddressAsync(validRequest);
+        Result<EstablishmentAddressResponse> result = await _service.CreateEstablishmentAddressAsync(validRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -132,21 +130,19 @@ public class EstablishmentAddressServiceTests
         {
             EstablishmentId = Guid.NewGuid().ToString(),
             AddressLine = "123 Main St",
-            Municipality = "Manhattan",  // Added required field
+            Municipality = "Manhattan",
             City = "New York",
-            Province = "NY",             // Added required field
-            Region = "Northeast",        // Added required field
-            Country = "USA",             // Added required field
+            Province = "NY",
+            Region = "Northeast",
+            Country = "USA",
             Latitude = 40.7128,
             Longitude = -74.0060,
             IsPrimary = false
         };
 
-        // Create valid domain objects
-        var establishmentId = EstablishmentId.Create(Guid.Parse(validRequest.EstablishmentId)).Value!;
+        EstablishmentId establishmentId = EstablishmentId.Create(Guid.Parse(validRequest.EstablishmentId)).Value!;
 
-        // Create valid Address with all required fields
-        var addressResult = Address.Create(
+        Result<Address> addressResult = Address.Create(
             validRequest.AddressLine,
             validRequest.Municipality,
             validRequest.City,
@@ -157,30 +153,27 @@ public class EstablishmentAddressServiceTests
             (decimal)validRequest.Longitude
         );
 
-        Assert.True(addressResult.IsSuccess, "Address validation failed"); // Ensure address creation succeeds
-        var address = addressResult.Value!;
+        Assert.True(addressResult.IsSuccess, "Address validation failed");
+        Address address = addressResult.Value!;
 
-        // Create valid Establishment
-        var establishmentName = EstablishmentName.Create("Test Establishment").Value!;
-        var establishmentEmail = EmailAddress.Create("test@example.com").Value!;
-        var establishment = Establishment.Create(establishmentName, establishmentEmail).Value!;
+        EstablishmentName establishmentName = EstablishmentName.Create("Test Establishment").Value!;
+        EmailAddress establishmentEmail = EmailAddress.Create("test@example.com").Value!;
+        Establishment establishment = Establishment.Create(establishmentName, establishmentEmail).Value!;
 
-        // Create valid EstablishmentAddress
-        var establishmentAddressResult = EstablishmentAddress.Create(establishmentId, address, false);
+        Result<EstablishmentAddress> establishmentAddressResult = EstablishmentAddress.Create(establishmentId, address, false);
         Assert.True(establishmentAddressResult.IsSuccess, "EstablishmentAddress creation failed");
-        var establishmentAddress = establishmentAddressResult.Value!;
+        EstablishmentAddress establishmentAddress = establishmentAddressResult.Value!;
 
-        // Mock repository responses
-        _mockEstablishmentRepository
+        _ = _mockEstablishmentRepository
             .Setup(repo => repo.GetByIdAsync(establishmentId))
             .ReturnsAsync(Result<Establishment>.Success(establishment));
 
-        _mockEstablishmentAddressRepository
+        _ = _mockEstablishmentAddressRepository
             .Setup(repo => repo.AddAsync(It.IsAny<EstablishmentAddress>()))
             .ReturnsAsync(Result<EstablishmentAddress>.Success(establishmentAddress));
 
         // Act
-        var result = await _service.CreateEstablishmentAddressAsync(validRequest);
+        Result<EstablishmentAddressResponse> result = await _service.CreateEstablishmentAddressAsync(validRequest);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -199,39 +192,36 @@ public class EstablishmentAddressServiceTests
         {
             EstablishmentId = Guid.NewGuid().ToString(),
             AddressLine = "456 Oak Ave",
-            Municipality = "Westside",   // Added required field
+            Municipality = "Westside",
             City = "Los Angeles",
-            Province = "CA",             // Added required field
-            Region = "West",             // Added required field
-            Country = "USA",             // Added required field
+            Province = "CA",
+            Region = "West",
+            Country = "USA",
             Latitude = 34.0522,
             Longitude = -118.2437,
             IsPrimary = true
         };
 
-        var establishmentId = EstablishmentId.Create(Guid.Parse(validRequest.EstablishmentId)).Value!;
+        EstablishmentId establishmentId = EstablishmentId.Create(Guid.Parse(validRequest.EstablishmentId)).Value!;
 
-        // Create valid establishment
-        var establishmentName = EstablishmentName.Create("Test Establishment").Value!;
-        var establishmentEmail = EmailAddress.Create("test@example.com").Value!;
-        var establishment = Establishment.Create(establishmentName, establishmentEmail).Value!;
+        EstablishmentName establishmentName = EstablishmentName.Create("Test Establishment").Value!;
+        EmailAddress establishmentEmail = EmailAddress.Create("test@example.com").Value!;
+        Establishment establishment = Establishment.Create(establishmentName, establishmentEmail).Value!;
 
-        // Mock repository responses
-        _mockEstablishmentRepository
+        _ = _mockEstablishmentRepository
             .Setup(repo => repo.GetByIdAsync(establishmentId))
             .ReturnsAsync(Result<Establishment>.Success(establishment));
 
-        // Fix: Provide all parameters including CancellationToken
-        _mockEstablishmentAddressRepository
+        _ = _mockEstablishmentAddressRepository
             .Setup(repo => repo.SetNonPrimaryForEstablishmentAsync(
                 establishmentId,
                 EstablishmentAddressId.Empty(),
-                It.IsAny<CancellationToken>()  // Add this line
+                It.IsAny<CancellationToken>()
             ))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _service.CreateEstablishmentAddressAsync(validRequest);
+        Result<EstablishmentAddressResponse> result = await _service.CreateEstablishmentAddressAsync(validRequest);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -239,7 +229,7 @@ public class EstablishmentAddressServiceTests
             repo => repo.SetNonPrimaryForEstablishmentAsync(
                 establishmentId,
                 EstablishmentAddressId.Empty(),
-                It.IsAny<CancellationToken>()  // Add this line
+                It.IsAny<CancellationToken>()
             ),
             Times.Once
         );
@@ -249,23 +239,22 @@ public class EstablishmentAddressServiceTests
     public async Task UpdateEstablishmentAddressAsync_InvalidData_ReturnsValidationError()
     {
         // Arrange
-        var addressId = EstablishmentAddressId.Create(Guid.NewGuid()).Value!;
+        EstablishmentAddressId addressId = EstablishmentAddressId.Create(Guid.NewGuid()).Value!;
         var invalidRequest = new EstablishmentAddressForUpdateRequest
         {
-            // Valid GUID format to bypass ID validation
             EstablishmentId = "invalid-guid",
-            AddressLine = "",    // Required field missing
-            City = "",           // Required field missing
-            Municipality = "",   // Required field missing
-            Province = "",       // Required field missing
-            Region = "",         // Required field missing
-            Country = "",        // Required field missing
-            Latitude = 200,      // Invalid value
-            Longitude = -200     // Invalid value
+            AddressLine = "",
+            City = "",
+            Municipality = "",
+            Province = "",
+            Region = "",
+            Country = "",
+            Latitude = 200,
+            Longitude = -200
         };
 
         // Act
-        var result = await _service.UpdateEstablishmentAddressAsync(addressId, invalidRequest);
+        Result<EstablishmentAddressResponse> result = await _service.UpdateEstablishmentAddressAsync(addressId, invalidRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -278,7 +267,7 @@ public class EstablishmentAddressServiceTests
     public async Task UpdateEstablishmentAddressAsync_NonexistentAddress_ReturnsNotFound()
     {
         // Arrange
-        var addressId = EstablishmentAddressId.Create(Guid.NewGuid()).Value!;
+        EstablishmentAddressId addressId = EstablishmentAddressId.Create(Guid.NewGuid()).Value!;
         var validRequest = new EstablishmentAddressForUpdateRequest
         {
             EstablishmentId = Guid.NewGuid().ToString(),
@@ -292,12 +281,12 @@ public class EstablishmentAddressServiceTests
             Longitude = -74.0060
         };
 
-        _mockEstablishmentAddressRepository
+        _ = _mockEstablishmentAddressRepository
             .Setup(repo => repo.GetByIdAsync(addressId))
             .ReturnsAsync(Result<EstablishmentAddress>.Failure(ErrorType.NotFound, [new Error("NotFound", "Not found")]));
 
         // Act
-        var result = await _service.UpdateEstablishmentAddressAsync(addressId, validRequest);
+        Result<EstablishmentAddressResponse> result = await _service.UpdateEstablishmentAddressAsync(addressId, validRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -310,20 +299,17 @@ public class EstablishmentAddressServiceTests
         // Arrange
         var addressId = Guid.NewGuid();
 
-        // 1. Create valid EstablishmentAddressId first
-        var addressIdResult = EstablishmentAddressId.Create(addressId);
-        var establishmentAddressId = addressIdResult.Value!; // Access the Value property
+        Result<EstablishmentAddressId> addressIdResult = EstablishmentAddressId.Create(addressId);
+        EstablishmentAddressId establishmentAddressId = addressIdResult.Value!;
 
-        // 2. Create existing address with different establishment ID
         var existingEstablishmentId = Guid.NewGuid();
-        var existingAddress = SetupExistingAddress(
+        EstablishmentAddress existingAddress = SetupExistingAddress(
             addressId: addressId,
             establishmentId: existingEstablishmentId
         );
 
         var request = new EstablishmentAddressForUpdateRequest
         {
-            // Use a DIFFERENT establishment ID
             EstablishmentId = Guid.NewGuid().ToString(),
             AddressLine = "New Line",
             City = existingAddress.Address.City,
@@ -336,8 +322,8 @@ public class EstablishmentAddressServiceTests
         };
 
         // Act
-        var result = await _service.UpdateEstablishmentAddressAsync(
-            establishmentAddressId, // Use the proper ID type here
+        Result<EstablishmentAddressResponse> result = await _service.UpdateEstablishmentAddressAsync(
+            establishmentAddressId,
             request
         );
 
@@ -345,16 +331,16 @@ public class EstablishmentAddressServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
     }
-    // Add this helper method to your test class
+
     private EstablishmentAddress SetupExistingAddress(
         Guid addressId,
         Guid? establishmentId = null,
         bool isPrimary = false)
     {
-        var estabId = establishmentId ?? Guid.NewGuid();
-        var establishmentIdObj = EstablishmentId.Create(estabId).Value!;
+        Guid estabId = establishmentId ?? Guid.NewGuid();
+        EstablishmentId establishmentIdObj = EstablishmentId.Create(estabId).Value!;
 
-        var address = Address.Create(
+        Address address = Address.Create(
             "Existing Address Line",
             "Existing City",
             "Existing Municipality",
@@ -365,20 +351,18 @@ public class EstablishmentAddressServiceTests
             -74.0060m
         ).Value!;
 
-        var establishmentAddressResult = EstablishmentAddress.Create(
+        Result<EstablishmentAddress> establishmentAddressResult = EstablishmentAddress.Create(
             establishmentIdObj,
             address,
             isPrimary
         );
 
-        var establishmentAddress = establishmentAddressResult.Value!;
+        EstablishmentAddress establishmentAddress = establishmentAddressResult.Value!;
 
-        // Set the ID using reflection
-        var idProperty = typeof(EstablishmentAddress).GetProperty("Id");
+        System.Reflection.PropertyInfo? idProperty = typeof(EstablishmentAddress).GetProperty("Id");
         idProperty!.SetValue(establishmentAddress, EstablishmentAddressId.Create(addressId).Value!);
 
-        // Mock repository response
-        _mockEstablishmentAddressRepository
+        _ = _mockEstablishmentAddressRepository
             .Setup(repo => repo.GetByIdAsync(EstablishmentAddressId.Create(addressId).Value!))
             .ReturnsAsync(Result<EstablishmentAddress>.Success(establishmentAddress));
 

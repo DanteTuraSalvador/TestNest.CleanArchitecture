@@ -1,5 +1,4 @@
-﻿using Castle.Core.Logging;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TestNest.Admin.Application.Contracts.Common;
@@ -14,6 +13,7 @@ using TestNest.Admin.SharedLibrary.Exceptions;
 using TestNest.Admin.SharedLibrary.Exceptions.Common;
 using TestNest.Admin.SharedLibrary.StronglyTypeIds;
 using TestNest.Admin.SharedLibrary.ValueObjects;
+using TestNest.Admin.SharedLibrary.Dtos.Responses;
 
 namespace TestNest.Admin.Application.Tests.Services.Employees;
 public class EmployeeServiceTests
@@ -66,29 +66,41 @@ public class EmployeeServiceTests
             throw new Exception($"EmployeeNumber creation failed: {string.Join(", ", employeeNumberResult.Errors.Select(e => e.Message))}");
         }
 
-        var employeeNumber = employeeNumberResult.Value!;
+        EmployeeNumber employeeNumber = employeeNumberResult.Value!;
 
-        var personNameResult = PersonName.Create(creationRequest.FirstName, creationRequest.MiddleName, creationRequest.LastName);
+        Result<PersonName> personNameResult = PersonName.Create(creationRequest.FirstName, creationRequest.MiddleName, creationRequest.LastName);
         if (!personNameResult.IsSuccess)
+        {
             throw new Exception($"PersonName creation failed: {string.Join(", ", personNameResult.Errors.Select(e => e.Message))}");
-        var personName = personNameResult.Value!;
+        }
 
-        var emailAddressResult = EmailAddress.Create(creationRequest.EmailAddress);
+        PersonName personName = personNameResult.Value!;
+
+        Result<EmailAddress> emailAddressResult = EmailAddress.Create(creationRequest.EmailAddress);
         if (!emailAddressResult.IsSuccess)
+        {
             throw new Exception($"EmailAddress creation failed: {string.Join(", ", emailAddressResult.Errors.Select(e => e.Message))}");
-        var emailAddress = emailAddressResult.Value!;
+        }
 
-        var employeeRoleIdResult = EmployeeRoleId.Create(creationRequest.EmployeeRoleId);
+        EmailAddress emailAddress = emailAddressResult.Value!;
+
+        Result<EmployeeRoleId> employeeRoleIdResult = EmployeeRoleId.Create(creationRequest.EmployeeRoleId);
         if (!employeeRoleIdResult.IsSuccess)
+        {
             throw new Exception($"EmployeeRoleId creation failed: {string.Join(", ", employeeRoleIdResult.Errors.Select(e => e.Message))}");
-        var employeeRoleId = employeeRoleIdResult.Value!;
+        }
 
-        var establishmentIdResult = EstablishmentId.Create(creationRequest.EstablishmentId);
+        EmployeeRoleId employeeRoleId = employeeRoleIdResult.Value!;
+
+        Result<EstablishmentId> establishmentIdResult = EstablishmentId.Create(creationRequest.EstablishmentId);
         if (!establishmentIdResult.IsSuccess)
+        {
             throw new Exception($"EstablishmentId creation failed: {string.Join(", ", establishmentIdResult.Errors.Select(e => e.Message))}");
-        var establishmentId = establishmentIdResult.Value!;
+        }
 
-        var createdEmployee = Employee.Create(
+        EstablishmentId establishmentId = establishmentIdResult.Value!;
+
+        Employee createdEmployee = Employee.Create(
             employeeNumber,
             personName,
             emailAddress,
@@ -96,7 +108,7 @@ public class EmployeeServiceTests
             establishmentId
         ).Value!;
 
-        _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
+        _ = _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
                 It.IsAny<EmployeeId>(),
                 employeeNumber,
                 personName,
@@ -104,23 +116,22 @@ public class EmployeeServiceTests
                 establishmentId))
             .ReturnsAsync(false);
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(employeeRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(employeeRoleId))
             .ReturnsAsync(true);
 
-        _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(establishmentId))
+        _ = _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(establishmentId))
             .ReturnsAsync(true);
 
-        _mockEmployeeRepository.Setup(repo => repo.AddAsync(It.IsAny<Employee>()))
+        _ = _mockEmployeeRepository.Setup(repo => repo.AddAsync(It.IsAny<Employee>()))
             .ReturnsAsync(createdEmployee);
 
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
-        // Add breakpoint here
-        var invocations = _mockEmployeeRoleRepository.Invocations;
+        IInvocationList invocations = _mockEmployeeRoleRepository.Invocations;
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -154,7 +165,7 @@ public class EmployeeServiceTests
 
         var creationRequest = new EmployeeForCreationRequest
         {
-            EmployeeNumber = null!, // Invalid: Null EmployeeNumber
+            EmployeeNumber = null!, 
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
@@ -164,14 +175,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<SharedLibrary.Dtos.Responses.EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -199,14 +209,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors); 
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -228,20 +237,19 @@ public class EmployeeServiceTests
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
-            EmailAddress = "invalid-email", // Invalid: Invalid EmailAddress
+            EmailAddress = "invalid-email", 
             EmployeeRoleId = employeeRoleIdGuid,
             EstablishmentId = establishmentIdGuid
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -260,7 +268,7 @@ public class EmployeeServiceTests
         var creationRequest = new EmployeeForCreationRequest
         {
             EmployeeNumber = "EMP001",
-            FirstName = "", // Invalid: Empty FirstName
+            FirstName = "",
             MiddleName = "Michael",
             LastName = "Doe",
             EmailAddress = "john.doe@example.com",
@@ -269,14 +277,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -294,7 +301,7 @@ public class EmployeeServiceTests
 
         var creationRequest = new EmployeeForCreationRequest
         {
-            EmployeeNumber = "", // Invalid: Empty EmployeeNumber
+            EmployeeNumber = "",
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
@@ -304,14 +311,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -329,7 +335,7 @@ public class EmployeeServiceTests
 
         var creationRequest = new EmployeeForCreationRequest
         {
-            EmployeeNumber = "EMP#01", // Invalid: Contains '#'
+            EmployeeNumber = "EMP#01",
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
@@ -339,14 +345,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -364,7 +369,7 @@ public class EmployeeServiceTests
 
         var creationRequest = new EmployeeForCreationRequest
         {
-            EmployeeNumber = "EM", // Invalid: Length is 2 (should be >= 3)
+            EmployeeNumber = "EM",
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
@@ -374,14 +379,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -399,7 +403,7 @@ public class EmployeeServiceTests
 
         var creationRequest = new EmployeeForCreationRequest
         {
-            EmployeeNumber = "EMP00123456789", // Invalid: Length is 11 (should be <= 10)
+            EmployeeNumber = "EMP00123456789",
             FirstName = "John",
             MiddleName = "Michael",
             LastName = "Doe",
@@ -409,14 +413,13 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -430,7 +433,7 @@ public class EmployeeServiceTests
     {
         // Arrange
         var establishmentIdGuid = Guid.NewGuid();
-        var emptyRoleIdGuid = Guid.Empty;
+        Guid emptyRoleIdGuid = Guid.Empty;
 
         var creationRequest = new EmployeeForCreationRequest
         {
@@ -439,7 +442,7 @@ public class EmployeeServiceTests
             MiddleName = "Michael",
             LastName = "Doe",
             EmailAddress = "john.doe@example.com",
-            EmployeeRoleId = emptyRoleIdGuid, // Invalid: Empty Guid
+            EmployeeRoleId = emptyRoleIdGuid,
             EstablishmentId = establishmentIdGuid
         };
 
@@ -451,7 +454,6 @@ public class EmployeeServiceTests
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -465,7 +467,7 @@ public class EmployeeServiceTests
     {
         // Arrange
         var employeeRoleIdGuid = Guid.NewGuid();
-        var emptyEstablishmentIdGuid = Guid.Empty;
+        Guid emptyEstablishmentIdGuid = Guid.Empty;
 
         var creationRequest = new EmployeeForCreationRequest
         {
@@ -475,18 +477,17 @@ public class EmployeeServiceTests
             LastName = "Doe",
             EmailAddress = "john.doe@example.com",
             EmployeeRoleId = employeeRoleIdGuid,
-            EstablishmentId = emptyEstablishmentIdGuid // Invalid: Empty Guid
+            EstablishmentId = emptyEstablishmentIdGuid
         };
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRoleRepository.Verify(repo => repo.RoleIdExists(It.IsAny<EmployeeRoleId>()), Times.Never);
         _mockEstablishmentRepository.Verify(repo => repo.EstablishmentIdExists(It.IsAny<EstablishmentId>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.EmployeeExistsWithSameCombination(
@@ -513,21 +514,20 @@ public class EmployeeServiceTests
             EstablishmentId = establishmentIdGuid
         };
 
-        var employeeNumber = EmployeeNumber.Create(creationRequest.EmployeeNumber).Value!;
-        var personName = PersonName.Create(creationRequest.FirstName, creationRequest.MiddleName, creationRequest.LastName).Value!;
-        var emailAddress = EmailAddress.Create(creationRequest.EmailAddress).Value!;
-        var employeeRoleId = EmployeeRoleId.Create(creationRequest.EmployeeRoleId).Value!;
-        var establishmentId = EstablishmentId.Create(creationRequest.EstablishmentId).Value!;
+        EmployeeNumber employeeNumber = EmployeeNumber.Create(creationRequest.EmployeeNumber).Value!;
+        PersonName personName = PersonName.Create(creationRequest.FirstName, creationRequest.MiddleName, creationRequest.LastName).Value!;
+        EmailAddress emailAddress = EmailAddress.Create(creationRequest.EmailAddress).Value!;
+        EmployeeRoleId employeeRoleId = EmployeeRoleId.Create(creationRequest.EmployeeRoleId).Value!;
+        EstablishmentId establishmentId = EstablishmentId.Create(creationRequest.EstablishmentId).Value!;
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(employeeRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(employeeRoleId))
             .ReturnsAsync(true);
 
-        _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(establishmentId))
+        _ = _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(establishmentId))
             .ReturnsAsync(true);
 
-        // Setup to simulate an existing employee with the same attributes
-        _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
-                It.IsAny<EmployeeId>(), // We don't care about the ID of the existing employee
+        _ = _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
+                It.IsAny<EmployeeId>(),
                 employeeNumber,
                 personName,
                 emailAddress,
@@ -535,7 +535,7 @@ public class EmployeeServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Conflict, result.ErrorType);
@@ -550,7 +550,7 @@ public class EmployeeServiceTests
     {
         // Arrange
         var establishmentIdGuid = Guid.NewGuid();
-        var invalidRoleIdGuid = Guid.NewGuid(); // A Guid that we will set up as not existing
+        var invalidRoleIdGuid = Guid.NewGuid();
 
         var creationRequest = new EmployeeForCreationRequest
         {
@@ -559,30 +559,27 @@ public class EmployeeServiceTests
             MiddleName = "Michael",
             LastName = "Doe",
             EmailAddress = "john.doe@example.com",
-            EmployeeRoleId = invalidRoleIdGuid, // Invalid Role ID
+            EmployeeRoleId = invalidRoleIdGuid,
             EstablishmentId = establishmentIdGuid
         };
 
         EmployeeRoleId invalidEmployeeRoleId = EmployeeRoleId.Create(invalidRoleIdGuid).Value!;
         EstablishmentId establishmentId = EstablishmentId.Create(establishmentIdGuid).Value!;
 
-        // Setup RoleIdExists to return false for the provided invalidRoleId
         _ = _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(invalidEmployeeRoleId))
             .ReturnsAsync(false);
 
-        // Setup EstablishmentIdExists to return true (so the test focuses on the RoleId)
         _ = _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(establishmentId))
             .ReturnsAsync(true);
 
         // Act
-        Result<SharedLibrary.Dtos.Responses.EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors);
 
-        // Verify that AddAsync and SaveChangesAsync were not called
         _mockEmployeeRepository.Verify(repo => repo.AddAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -592,7 +589,7 @@ public class EmployeeServiceTests
     {
         // Arrange
         var employeeRoleIdGuid = Guid.NewGuid();
-        var invalidEstablishmentIdGuid = Guid.NewGuid(); // A Guid that we will set up as not existing
+        var invalidEstablishmentIdGuid = Guid.NewGuid();
 
         var creationRequest = new EmployeeForCreationRequest
         {
@@ -602,7 +599,7 @@ public class EmployeeServiceTests
             LastName = "Doe",
             EmailAddress = "john.doe@example.com",
             EmployeeRoleId = employeeRoleIdGuid,
-            EstablishmentId = invalidEstablishmentIdGuid // Invalid Establishment ID
+            EstablishmentId = invalidEstablishmentIdGuid
         };
 
         EmployeeNumber employeeNumber = EmployeeNumber.Create(creationRequest.EmployeeNumber).Value!;
@@ -611,23 +608,20 @@ public class EmployeeServiceTests
         EmployeeRoleId employeeRoleId = EmployeeRoleId.Create(creationRequest.EmployeeRoleId).Value!;
         EstablishmentId invalidEstablishmentId = EstablishmentId.Create(invalidEstablishmentIdGuid).Value!;
 
-        // Setup RoleIdExists to return true (so the test focuses on the EstablishmentId)
         _ = _mockEmployeeRoleRepository.Setup(repo => repo.RoleIdExists(employeeRoleId))
             .ReturnsAsync(true);
 
-        // Setup EstablishmentIdExists to return false for the provided invalidEstablishmentId
         _ = _mockEstablishmentRepository.Setup(repo => repo.EstablishmentIdExists(invalidEstablishmentId))
             .ReturnsAsync(false);
 
         // Act
-        Result<SharedLibrary.Dtos.Responses.EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
+        Result<EmployeeResponse> result = await _employeeService.CreateEmployeeAsync(creationRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors);
 
-        // Verify that AddAsync and SaveChangesAsync were not called
         _mockEmployeeRepository.Verify(repo => repo.AddAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -636,7 +630,7 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_EmployeeNotFound_ReturnsFailureWithNotFound()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
         var updateRequest = new EmployeeForUpdateRequest
         {
             EmployeeNumber = "EMP002",
@@ -649,19 +643,17 @@ public class EmployeeServiceTests
             EmployeeStatusId = 1
         };
 
-        // Setup GetByIdAsync to return a failure indicating not found
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
-     .ReturnsAsync(Result<Employee>.Failure(ErrorType.NotFound, new Error(EmployeeException.NotFound().Code.ToString(), EmployeeException.NotFound().Message)));
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+            .ReturnsAsync(Result<Employee>.Failure(ErrorType.NotFound, new Error(EmployeeException.NotFound().Code.ToString(), EmployeeException.NotFound().Message)));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
-        Assert.NotEmpty(result.Errors); // Just assert that there is at least one error
+        Assert.NotEmpty(result.Errors);
 
-        // Verify that no further processing occurred
         _mockEmployeeRepository.Verify(repo => repo.DetachAsync(It.IsAny<Employee>()), Times.Never);
         _mockEmployeeRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
@@ -671,8 +663,8 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_InvalidInput_NullFirstName_ReturnsFailureWithValidationErrors()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        var existingEmployee = Employee.Create(
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        Employee existingEmployee = Employee.Create(
             EmployeeNumber.Create("EMP001").Value!,
             PersonName.Create("Old", null, "Name").Value!,
             EmailAddress.Create("old@example.com").Value!,
@@ -683,7 +675,7 @@ public class EmployeeServiceTests
         var updateRequest = new EmployeeForUpdateRequest
         {
             EmployeeNumber = "EMP002",
-            FirstName = null!, // Invalid: Null FirstName
+            FirstName = null!,
             MiddleName = "Marie",
             LastName = "Doe",
             EmailAddress = "jane.doe@example.com",
@@ -692,19 +684,17 @@ public class EmployeeServiceTests
             EmployeeStatusId = 1
         };
 
-        // Setup GetByIdAsync to return a successful result with an existing employee
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Success(existingEmployee));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify that UpdateAsync and SaveChangesAsync were not called
         _mockEmployeeRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -713,8 +703,8 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_InvalidInput_EmptyLastName_ReturnsFailureWithValidationErrors()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        var existingEmployee = Employee.Create(
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        Employee existingEmployee = Employee.Create(
             EmployeeNumber.Create("EMP001").Value!,
             PersonName.Create("Old", null, "Name").Value!,
             EmailAddress.Create("old@example.com").Value!,
@@ -727,26 +717,24 @@ public class EmployeeServiceTests
             EmployeeNumber = "EMP002",
             FirstName = "Jane",
             MiddleName = "Marie",
-            LastName = "", // Invalid: Empty LastName
+            LastName = "",
             EmailAddress = "jane.doe@example.com",
             EmployeeRoleId = Guid.NewGuid(),
             EstablishmentId = Guid.NewGuid(),
             EmployeeStatusId = 1
         };
 
-        // Setup GetByIdAsync to return a successful result with an existing employee
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Success(existingEmployee));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -755,8 +743,8 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_InvalidInput_InvalidEmailAddress_ReturnsFailureWithValidationErrors()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        var existingEmployee = Employee.Create(
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        Employee existingEmployee = Employee.Create(
             EmployeeNumber.Create("EMP001").Value!,
             PersonName.Create("Old", null, "Name").Value!,
             EmailAddress.Create("old@example.com").Value!,
@@ -770,25 +758,23 @@ public class EmployeeServiceTests
             FirstName = "Jane",
             MiddleName = "Marie",
             LastName = "Doe",
-            EmailAddress = "invalid-email", // Invalid: Invalid EmailAddress
+            EmailAddress = "invalid-email",
             EmployeeRoleId = Guid.NewGuid(),
             EstablishmentId = Guid.NewGuid(),
             EmployeeStatusId = 1
         };
 
-        // Setup GetByIdAsync to return a successful result with an existing employee
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Success(existingEmployee));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -797,8 +783,8 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_InvalidInput_InvalidEmployeeNumberFormat_ReturnsFailureWithValidationErrors()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        var existingEmployee = Employee.Create(
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        Employee existingEmployee = Employee.Create(
             EmployeeNumber.Create("EMP001").Value!,
             PersonName.Create("Old", null, "Name").Value!,
             EmailAddress.Create("old@example.com").Value!,
@@ -808,7 +794,7 @@ public class EmployeeServiceTests
 
         var updateRequest = new EmployeeForUpdateRequest
         {
-            EmployeeNumber = "EMP#02", // Invalid: Contains '#'
+            EmployeeNumber = "EMP#02",
             FirstName = "Jane",
             MiddleName = "Marie",
             LastName = "Doe",
@@ -818,19 +804,17 @@ public class EmployeeServiceTests
             EmployeeStatusId = 1
         };
 
-        // Setup GetByIdAsync to return a successful result with an existing employee
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Success(existingEmployee));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
 
-        // Verify no further processing occurred
         _mockEmployeeRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Employee>()), Times.Never);
         _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Never);
     }
@@ -838,16 +822,15 @@ public class EmployeeServiceTests
     public async Task UpdateEmployeeAsync_DuplicateEmployeeOnUpdateRequest_ReturnsFailureWithConflictError()
     {
         // Arrange
-        var employeeIdToUpdate = EmployeeId.Create(Guid.NewGuid()).Value!;
+        EmployeeId employeeIdToUpdate = EmployeeId.Create(Guid.NewGuid()).Value!;
 
-        // 1. Create valid IDs and domain objects for the existing employee
-        var validEmployeeRoleId = EmployeeRoleId.Create(Guid.NewGuid()).Value!;
-        var validEstablishmentId = EstablishmentId.Create(Guid.NewGuid()).Value!;
-        var validEmployeeNumber = EmployeeNumber.Create("EMP-12345").Value!;
-        var validPersonName = PersonName.Create("John", null, "Doe").Value!;
-        var validEmail = EmailAddress.Create("john.doe@example.com").Value!;
+        EmployeeRoleId validEmployeeRoleId = EmployeeRoleId.Create(Guid.NewGuid()).Value!;
+        EstablishmentId validEstablishmentId = EstablishmentId.Create(Guid.NewGuid()).Value!;
+        EmployeeNumber validEmployeeNumber = EmployeeNumber.Create("EMP-12345").Value!;
+        PersonName validPersonName = PersonName.Create("John", null, "Doe").Value!;
+        EmailAddress validEmail = EmailAddress.Create("john.doe@example.com").Value!;
 
-        var existingEmployee = Employee.Create(
+        Employee existingEmployee = Employee.Create(
             validEmployeeNumber,
             validPersonName,
             validEmail,
@@ -855,11 +838,9 @@ public class EmployeeServiceTests
             validEstablishmentId
         ).Value!;
 
-        // 2. Mock GetByIdAsync to return the valid employee
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeIdToUpdate))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeIdToUpdate))
             .ReturnsAsync(Result<Employee>.Success(existingEmployee));
 
-        // 3. Prepare update request with valid values
         var updateRequest = new EmployeeForUpdateRequest
         {
             EmployeeNumber = "EMP-67890",
@@ -872,8 +853,7 @@ public class EmployeeServiceTests
             EmployeeStatusId = 1
         };
 
-        // 4. Mock duplicate check
-        _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
+        _ = _mockEmployeeRepository.Setup(repo => repo.EmployeeExistsWithSameCombination(
                 employeeIdToUpdate,
                 EmployeeNumber.Create(updateRequest.EmployeeNumber).Value!,
                 PersonName.Create(updateRequest.FirstName, updateRequest.MiddleName, updateRequest.LastName).Value!,
@@ -882,12 +862,11 @@ public class EmployeeServiceTests
             ))
             .ReturnsAsync(true);
 
-        // 5. Safety mocks
-        _mockEmployeeRepository.Setup(repo => repo.UpdateAsync(It.IsAny<Employee>()))
+        _ = _mockEmployeeRepository.Setup(repo => repo.UpdateAsync(It.IsAny<Employee>()))
             .ReturnsAsync(Result<Employee>.Failure(ErrorType.Conflict, [new Error("Test", "Error")]));
 
         // Act
-        var result = await _employeeService.UpdateEmployeeAsync(employeeIdToUpdate, updateRequest);
+        Result<EmployeeResponse> result = await _employeeService.UpdateEmployeeAsync(employeeIdToUpdate, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -902,14 +881,14 @@ public class EmployeeServiceTests
     public async Task DeleteEmployeeAsync_ValidId_ReturnsSuccessAndDeletes()
     {
         // Arrange
-        var employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
-        _mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
+        EmployeeId employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
+        _ = _mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
             .ReturnsAsync(Result.Success());
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
-            .ReturnsAsync(1); // Corrected ReturnsAsync to return an int
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+            .ReturnsAsync(1);
 
         // Act
-        var result = await _employeeService.DeleteEmployeeAsync(employeeIdToDelete);
+        Result result = await _employeeService.DeleteEmployeeAsync(employeeIdToDelete);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -921,13 +900,13 @@ public class EmployeeServiceTests
     public async Task DeleteEmployeeAsync_RepositoryDeleteFails_ReturnsFailureAndDoesNotSaveChanges()
     {
         // Arrange
-        var employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
+        EmployeeId employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
         var repositoryError = Result.Failure(ErrorType.Database, [new Error("DB-001", "Database error during delete")]);
-        _mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
+        _ = _mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
             .ReturnsAsync(repositoryError);
 
         // Act
-        var result = await _employeeService.DeleteEmployeeAsync(employeeIdToDelete);
+        Result result = await _employeeService.DeleteEmployeeAsync(employeeIdToDelete);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -942,9 +921,8 @@ public class EmployeeServiceTests
     public async Task DeleteEmployeeAsync_SaveChangesFails_ReturnsFailure()
     {
         // Arrange
-        var employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
+        EmployeeId employeeIdToDelete = EmployeeId.Create(Guid.NewGuid()).Value!;
 
-        // Mock all dependencies
         var mockEmployeeRepository = new Mock<IEmployeeRepository>();
         var mockEmployeeRoleRepository = new Mock<IEmployeeRoleRepository>();
         var mockEstablishmentRepository = new Mock<IEstablishmentRepository>();
@@ -952,30 +930,27 @@ public class EmployeeServiceTests
         var mockLogger = new Mock<ILogger<EmployeeService>>();
         var mockExceptionHandlerFactory = new Mock<IDatabaseExceptionHandlerFactory>();
 
-        // Setup exception handler factory
-        mockExceptionHandlerFactory
+        _ = mockExceptionHandlerFactory
             .Setup(f => f.HandleDbUpdateException(It.IsAny<DbUpdateException>()))
             .Returns(Result.Failure(ErrorType.Database, [new Error("DB_ERROR", "Database error")]));
 
-        // Initialize the service with all mocked dependencies
         var employeeService = new EmployeeService(
             mockEmployeeRepository.Object,
             mockEmployeeRoleRepository.Object,
             mockEstablishmentRepository.Object,
             mockUnitOfWork.Object,
             mockExceptionHandlerFactory.Object,
-            mockLogger.Object // Inject the mocked logger
+            mockLogger.Object 
         );
 
-        // Configure repository and unit of work
-        mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
+        _ = mockEmployeeRepository.Setup(repo => repo.DeleteAsync(employeeIdToDelete))
             .ReturnsAsync(Result.Success());
 
-        mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ThrowsAsync(new DbUpdateException("Simulated database failure"));
 
         // Act
-        var result = await employeeService.DeleteEmployeeAsync(employeeIdToDelete);
+        Result result = await employeeService.DeleteEmployeeAsync(employeeIdToDelete);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -988,8 +963,8 @@ public class EmployeeServiceTests
     public async Task GetEmployeeByIdAsync_EmployeeExists_ReturnsEmployeeResponse()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        var employee = Employee.Create(
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        Employee employee = Employee.Create(
             EmployeeNumber.Create("EMP-001").Value!,
             PersonName.Create("John", null, "Doe").Value!,
             EmailAddress.Create("john.doe@example.com").Value!,
@@ -997,11 +972,11 @@ public class EmployeeServiceTests
             EstablishmentId.Create(Guid.NewGuid()).Value!
         ).Value!;
 
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Success(employee));
 
         // Act
-        var result = await _employeeService.GetEmployeeByIdAsync(employeeId);
+        Result<EmployeeResponse> result = await _employeeService.GetEmployeeByIdAsync(employeeId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -1013,12 +988,12 @@ public class EmployeeServiceTests
     public async Task GetEmployeeByIdAsync_EmployeeNotFound_ReturnsNotFoundError()
     {
         // Arrange
-        var employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
-        _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
+        EmployeeId employeeId = EmployeeId.Create(Guid.NewGuid()).Value!;
+        _ = _mockEmployeeRepository.Setup(repo => repo.GetByIdAsync(employeeId))
             .ReturnsAsync(Result<Employee>.Failure(ErrorType.NotFound, [new Error("NotFound", "Employee not found")]));
 
         // Act
-        var result = await _employeeService.GetEmployeeByIdAsync(employeeId);
+        Result<EmployeeResponse> result = await _employeeService.GetEmployeeByIdAsync(employeeId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -1030,7 +1005,7 @@ public class EmployeeServiceTests
     public async Task GetAllEmployeesAsync_EmployeesExist_ReturnsEmployeeResponses()
     {
         // Arrange
-        var spec = new EmployeeSpecification(); // Use your actual specification
+        var spec = new EmployeeSpecification();
         var employees = new List<Employee>
     {
         Employee.Create(
@@ -1040,20 +1015,19 @@ public class EmployeeServiceTests
             EmployeeRoleId.Create(Guid.NewGuid()).Value!,
             EstablishmentId.Create(Guid.NewGuid()).Value!
         ).Value!,
-        Employee.Create(
-            EmployeeNumber.Create("EMP-002").Value!,
-            PersonName.Create("Bob", null, "Johnson").Value!,
-            EmailAddress.Create("bob@example.com").Value!,
-            EmployeeRoleId.Create(Guid.NewGuid()).Value!,
-            EstablishmentId.Create(Guid.NewGuid()).Value!
-        ).Value!
-    };
+            Employee.Create(
+                EmployeeNumber.Create("EMP-002").Value!,
+                PersonName.Create("Bob", null, "Johnson").Value!,
+                EmailAddress.Create("bob@example.com").Value!,
+                EmployeeRoleId.Create(Guid.NewGuid()).Value!,
+                EstablishmentId.Create(Guid.NewGuid()).Value!
+                ).Value!};
 
-        _mockEmployeeRepository.Setup(repo => repo.ListAsync(spec))
+        _ = _mockEmployeeRepository.Setup(repo => repo.ListAsync(spec))
             .ReturnsAsync(Result<IEnumerable<Employee>>.Success(employees));
 
         // Act
-        var result = await _employeeService.GetAllEmployeesAsync(spec);
+        Result<IEnumerable<EmployeeResponse>> result = await _employeeService.GetAllEmployeesAsync(spec);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -1066,11 +1040,11 @@ public class EmployeeServiceTests
     {
         // Arrange
         var spec = new EmployeeSpecification();
-        _mockEmployeeRepository.Setup(repo => repo.ListAsync(spec))
+        _ = _mockEmployeeRepository.Setup(repo => repo.ListAsync(spec))
             .ReturnsAsync(Result<IEnumerable<Employee>>.Failure(ErrorType.Database, [new Error("DB_ERROR", "Database error")]));
 
         // Act
-        var result = await _employeeService.GetAllEmployeesAsync(spec);
+        Result<IEnumerable<EmployeeResponse>> result = await _employeeService.GetAllEmployeesAsync(spec);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -1083,11 +1057,11 @@ public class EmployeeServiceTests
         // Arrange
         var spec = new EmployeeSpecification();
         const int expectedCount = 5;
-        _mockEmployeeRepository.Setup(repo => repo.CountAsync(spec))
+        _ = _mockEmployeeRepository.Setup(repo => repo.CountAsync(spec))
             .ReturnsAsync(Result<int>.Success(expectedCount));
 
         // Act
-        var result = await _employeeService.CountAsync(spec);
+        Result<int> result = await _employeeService.CountAsync(spec);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -1099,11 +1073,11 @@ public class EmployeeServiceTests
     {
         // Arrange
         var spec = new EmployeeSpecification();
-        _mockEmployeeRepository.Setup(repo => repo.CountAsync(spec))
+        _ = _mockEmployeeRepository.Setup(repo => repo.CountAsync(spec))
             .ReturnsAsync(Result<int>.Failure(ErrorType.Database, [new Error("DB_ERROR", "Database error")]));
 
         // Act
-        var result = await _employeeService.CountAsync(spec);
+        Result<int> result = await _employeeService.CountAsync(spec);
 
         // Assert
         Assert.False(result.IsSuccess);

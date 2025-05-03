@@ -64,7 +64,7 @@ public class EstablishmentContactTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal(establishmentContact.EstablishmentContactId, result.Value.EstablishmentContactId); // Same ID
+        Assert.Equal(establishmentContact.EstablishmentContactId, result.Value.EstablishmentContactId); 
         Assert.Equal(establishmentId, result.Value.EstablishmentId);
         Assert.Equal(personNameResult.Value!, result.Value.ContactPerson);
         Assert.Equal(newPhoneNumberResult.Value!, result.Value.ContactPhone);
@@ -87,7 +87,7 @@ public class EstablishmentContactTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal(establishmentContact.EstablishmentContactId, result.Value.EstablishmentContactId); // Same instance
+        Assert.Equal(establishmentContact.EstablishmentContactId, result.Value.EstablishmentContactId);
         Assert.Equal(newIsPrimary, result.Value.IsPrimary);
         Assert.Equal(establishmentContact.ContactPerson, result.Value.ContactPerson);
         Assert.Equal(establishmentContact.ContactPhone, result.Value.ContactPhone);
@@ -112,7 +112,7 @@ public class EstablishmentContactTests
     [Fact]
     public void IsEmpty_ReturnsTrueForEmptyInstance()
     {
-        EstablishmentContact emptyContact = EstablishmentContact.Empty();
+        var emptyContact = EstablishmentContact.Empty();
 
         bool isEmpty = emptyContact.IsEmpty();
 

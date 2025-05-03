@@ -13,9 +13,9 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var descriptionResult = MemberDescription.Create("Valid Description");
-        var tagResult = MemberTag.Create("ValidTag");
-        var titleResult = MemberTitle.Create("Valid Title");
+        Result<MemberDescription> descriptionResult = MemberDescription.Create("Valid Description");
+        Result<MemberTag> tagResult = MemberTag.Create("ValidTag");
+        Result<MemberTitle> titleResult = MemberTitle.Create("Valid Title");
 
         // Act
         Result<EstablishmentMember> result = EstablishmentMember.Create(
@@ -44,11 +44,11 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var descriptionResult = MemberDescription.Create("Valid Description");
-        var tagResult = MemberTag.Create("ValidTag");
-        var initialTitleResult = MemberTitle.Create("Initial Title");
+        Result<MemberDescription> descriptionResult = MemberDescription.Create("Valid Description");
+        Result<MemberTag> tagResult = MemberTag.Create("ValidTag");
+        Result<MemberTitle> initialTitleResult = MemberTitle.Create("Initial Title");
 
-        var establishmentMemberResult = EstablishmentMember.Create(
+        Result<EstablishmentMember> establishmentMemberResult = EstablishmentMember.Create(
             establishmentId,
             employeeId,
             descriptionResult.Value!,
@@ -56,9 +56,9 @@ public class EstablishmentMemberTests
             initialTitleResult.Value!
         );
         Assert.True(establishmentMemberResult.IsSuccess);
-        var establishmentMember = establishmentMemberResult.Value!;
+        EstablishmentMember establishmentMember = establishmentMemberResult.Value!;
 
-        var newTitleResult = MemberTitle.Create("New Title");
+        Result<MemberTitle> newTitleResult = MemberTitle.Create("New Title");
 
         // Act
         Result<EstablishmentMember> result = establishmentMember.WithTitle(newTitleResult.Value!);
@@ -66,7 +66,7 @@ public class EstablishmentMemberTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId); // Same ID
+        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId);
         Assert.Equal(establishmentId, result.Value.EstablishmentId);
         Assert.Equal(employeeId, result.Value.EmployeeId);
         Assert.Equal(descriptionResult.Value!, result.Value.MemberDescription);
@@ -81,11 +81,11 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var initialDescriptionResult = MemberDescription.Create("Initial Description");
-        var tagResult = MemberTag.Create("ValidTag");
-        var titleResult = MemberTitle.Create("Valid Title");
+        Result<MemberDescription> initialDescriptionResult = MemberDescription.Create("Initial Description");
+        Result<MemberTag> tagResult = MemberTag.Create("ValidTag");
+        Result<MemberTitle> titleResult = MemberTitle.Create("Valid Title");
 
-        var establishmentMemberResult = EstablishmentMember.Create(
+        Result<EstablishmentMember> establishmentMemberResult = EstablishmentMember.Create(
             establishmentId,
             employeeId,
             initialDescriptionResult.Value!,
@@ -93,9 +93,9 @@ public class EstablishmentMemberTests
             titleResult.Value!
         );
         Assert.True(establishmentMemberResult.IsSuccess);
-        var establishmentMember = establishmentMemberResult.Value!;
+        EstablishmentMember establishmentMember = establishmentMemberResult.Value!;
 
-        var newDescriptionResult = MemberDescription.Create("New Description");
+        Result<MemberDescription> newDescriptionResult = MemberDescription.Create("New Description");
 
         // Act
         Result<EstablishmentMember> result = establishmentMember.WithDescription(newDescriptionResult.Value!);
@@ -103,7 +103,7 @@ public class EstablishmentMemberTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId); // Same ID
+        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId);
         Assert.Equal(establishmentId, result.Value.EstablishmentId);
         Assert.Equal(employeeId, result.Value.EmployeeId);
         Assert.Equal(newDescriptionResult.Value!, result.Value.MemberDescription);
@@ -118,11 +118,11 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var descriptionResult = MemberDescription.Create("Valid Description");
-        var initialTagResult = MemberTag.Create("InitialTag");
-        var titleResult = MemberTitle.Create("Valid Title");
+        Result<MemberDescription> descriptionResult = MemberDescription.Create("Valid Description");
+        Result<MemberTag> initialTagResult = MemberTag.Create("InitialTag");
+        Result<MemberTitle> titleResult = MemberTitle.Create("Valid Title");
 
-        var establishmentMemberResult = EstablishmentMember.Create(
+        Result<EstablishmentMember> establishmentMemberResult = EstablishmentMember.Create(
             establishmentId,
             employeeId,
             descriptionResult.Value!,
@@ -130,9 +130,9 @@ public class EstablishmentMemberTests
             titleResult.Value!
         );
         Assert.True(establishmentMemberResult.IsSuccess);
-        var establishmentMember = establishmentMemberResult.Value!;
+        EstablishmentMember establishmentMember = establishmentMemberResult.Value!;
 
-        var newTagResult = MemberTag.Create("NewTag");
+        Result<MemberTag> newTagResult = MemberTag.Create("NewTag");
 
         // Act
         Result<EstablishmentMember> result = establishmentMember.WithTag(newTagResult.Value!);
@@ -140,7 +140,7 @@ public class EstablishmentMemberTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId); // Same ID
+        Assert.Equal(establishmentMember.EstablishmentMemberId, result.Value.EstablishmentMemberId);
         Assert.Equal(establishmentId, result.Value.EstablishmentId);
         Assert.Equal(employeeId, result.Value.EmployeeId);
         Assert.Equal(descriptionResult.Value!, result.Value.MemberDescription);
@@ -155,11 +155,11 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var descriptionResult = MemberDescription.Create("Valid Description");
-        var tagResult = MemberTag.Create("ValidTag");
-        var titleResult = MemberTitle.Create("Valid Title");
+        Result<MemberDescription> descriptionResult = MemberDescription.Create("Valid Description");
+        Result<MemberTag> tagResult = MemberTag.Create("ValidTag");
+        Result<MemberTitle> titleResult = MemberTitle.Create("Valid Title");
 
-        var establishmentMember = EstablishmentMember.Create(
+        EstablishmentMember establishmentMember = EstablishmentMember.Create(
             establishmentId,
             employeeId,
             descriptionResult.Value!,
@@ -178,7 +178,7 @@ public class EstablishmentMemberTests
     public void IsEmpty_ReturnsTrueForEmptyInstance()
     {
         // Arrange
-        EstablishmentMember emptyMember = EstablishmentMember.Empty();
+        var emptyMember = EstablishmentMember.Empty();
 
         // Act
         bool isEmpty = emptyMember.IsEmpty();
@@ -193,11 +193,11 @@ public class EstablishmentMemberTests
         // Arrange
         var establishmentId = EstablishmentId.New();
         var employeeId = EmployeeId.New();
-        var descriptionResult = MemberDescription.Create("Valid Description");
-        var tagResult = MemberTag.Create("ValidTag");
-        var titleResult = MemberTitle.Create("Valid Title");
+        Result<MemberDescription> descriptionResult = MemberDescription.Create("Valid Description");
+        Result<MemberTag> tagResult = MemberTag.Create("ValidTag");
+        Result<MemberTitle> titleResult = MemberTitle.Create("Valid Title");
 
-        var establishmentMember = EstablishmentMember.Create(
+        EstablishmentMember establishmentMember = EstablishmentMember.Create(
             establishmentId,
             employeeId,
             descriptionResult.Value!,

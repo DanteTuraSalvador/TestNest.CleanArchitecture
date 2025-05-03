@@ -82,14 +82,11 @@ public class EmployeeRoleServiceTests
     [Fact]
     public async Task CreateEmployeeRoleAsync_InvalidRequest_ReturnsValidationError()
     {
-        // Arrange
-        const string invalidRoleName = ""; // An empty role name should be invalid
+        const string invalidRoleName = ""; 
         var creationRequest = new EmployeeRoleForCreationRequest { RoleName = invalidRoleName };
 
-        // Act
         Result<EmployeeRoleResponse> result = await _employeeRoleService.CreateEmployeeRoleAsync(creationRequest);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.ErrorType);
         Assert.NotEmpty(result.Errors);
@@ -151,40 +148,36 @@ public class EmployeeRoleServiceTests
         const string initialRoleName = "Editor";
         const string updatedRoleName = "Supervisor";
         var updateRequest = new EmployeeRoleForUpdateRequest { RoleName = updatedRoleName };
-        var initialRoleNameVo = RoleName.Create(initialRoleName).Value!;
-        var existingEmployeeRoleResult = EmployeeRole.Create(initialRoleNameVo);
+        RoleName initialRoleNameVo = RoleName.Create(initialRoleName).Value!;
+        Result<EmployeeRole> existingEmployeeRoleResult = EmployeeRole.Create(initialRoleNameVo);
         Assert.True(existingEmployeeRoleResult.IsSuccess);
-        var existingEmployeeRole = existingEmployeeRoleResult.Value!;
+        EmployeeRole existingEmployeeRole = existingEmployeeRoleResult.Value!;
 
-        // Manually set the Id of the existing role
         PropertyInfo propertyInfo = existingEmployeeRole.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         propertyInfo?.SetValue(existingEmployeeRole, roleId);
 
-        var updatedRoleNameVo = RoleName.Create(updatedRoleName).Value!;
-        var updatedEmployeeRoleResult = existingEmployeeRole.WithRoleName(updatedRoleNameVo);
+        RoleName updatedRoleNameVo = RoleName.Create(updatedRoleName).Value!;
+        Result<EmployeeRole> updatedEmployeeRoleResult = existingEmployeeRole.WithRoleName(updatedRoleNameVo);
         Assert.True(updatedEmployeeRoleResult.IsSuccess);
-        existingEmployeeRole = updatedEmployeeRoleResult.Value!; // Re-assign the updated EmployeeRole
+        existingEmployeeRole = updatedEmployeeRoleResult.Value!;
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(roleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(roleId))
             .ReturnsAsync(Result<EmployeeRole>.Success(existingEmployeeRole));
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetEmployeeRoleByNameAsync(updatedRoleName))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetEmployeeRoleByNameAsync(updatedRoleName))
             .ReturnsAsync(Result<EmployeeRole>.Failure(ErrorType.NotFound, new Error("NotFound", "Role not found.")));
 
-        // When UpdateAsync is called with any EmployeeRole, return a successful result
-        // with the *same* existingEmployeeRole instance (which now has the updated name and the correct Id)
-        _mockEmployeeRoleRepository.Setup(repo => repo.UpdateAsync(It.IsAny<EmployeeRole>()))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.UpdateAsync(It.IsAny<EmployeeRole>()))
             .ReturnsAsync(Result<EmployeeRole>.Success(existingEmployeeRole));
 
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
+
         // Act
         Result<EmployeeRoleResponse> result = await _employeeRoleService.UpdateEmployeeRoleAsync(roleId, updateRequest);
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        // Basic checks for success, omitting detailed property assertions for now
-        // If you want to re-enable them later, ensure the Arrange section correctly sets up the updated entity.
 
         _mockEmployeeRoleRepository.Verify(repo => repo.GetByIdAsync(roleId), Times.Once);
         _mockEmployeeRoleRepository.Verify(repo => repo.GetEmployeeRoleByNameAsync(updatedRoleName), Times.Once);
@@ -209,11 +202,11 @@ public class EmployeeRoleServiceTests
         const string newRoleName = "Manager";
         var updateRequest = new EmployeeRoleForUpdateRequest { RoleName = newRoleName };
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(invalidRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(invalidRoleId))
             .ReturnsAsync(Result<EmployeeRole>.Failure(ErrorType.NotFound, new Error("NotFound", "Employee Role not found.")));
 
         // Act
-        var result = await _employeeRoleService.UpdateEmployeeRoleAsync(invalidRoleId, updateRequest);
+        Result<EmployeeRoleResponse> result = await _employeeRoleService.UpdateEmployeeRoleAsync(invalidRoleId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -241,15 +234,16 @@ public class EmployeeRoleServiceTests
     {
         // Arrange
         var validRoleId = EmployeeRoleId.New();
-        const string invalidRoleName = ""; // An empty role name should be invalid
+        const string invalidRoleName = ""; 
         var updateRequest = new EmployeeRoleForUpdateRequest { RoleName = invalidRoleName };
-        var existingRole = EmployeeRole.Create(RoleName.Create("OldName").Value!).Value!;
-        PropertyInfo propertyInfo = existingRole.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        EmployeeRole existingRole = EmployeeRole.Create(RoleName.Create("OldName").Value!).Value!;
+        PropertyInfo propertyInfo = existingRole.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         propertyInfo?.SetValue(existingRole, validRoleId);
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(validRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(validRoleId))
             .ReturnsAsync(Result<EmployeeRole>.Success(existingRole));
-
+         
         // Act
         var result = await _employeeRoleService.UpdateEmployeeRoleAsync(validRoleId, updateRequest);
 
@@ -284,21 +278,23 @@ public class EmployeeRoleServiceTests
         const string duplicateRoleName = "Admin";
         var updateRequest = new EmployeeRoleForUpdateRequest { RoleName = duplicateRoleName };
 
-        var existingRole = EmployeeRole.Create(RoleName.Create(initialRoleName).Value!).Value!;
-        PropertyInfo existingPropertyInfo = existingRole.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        EmployeeRole existingRole = EmployeeRole.Create(RoleName.Create(initialRoleName).Value!).Value!;
+        PropertyInfo existingPropertyInfo = existingRole.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         existingPropertyInfo?.SetValue(existingRole, existingRoleId);
 
         var conflictingRole = EmployeeRole.Create(RoleName.Create(duplicateRoleName).Value!).Value!;
-        PropertyInfo conflictingPropertyInfo = conflictingRole.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        PropertyInfo conflictingPropertyInfo = conflictingRole.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         conflictingPropertyInfo?.SetValue(conflictingRole, anotherRoleId);
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(existingRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(existingRoleId))
             .ReturnsAsync(Result<EmployeeRole>.Success(existingRole));
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetEmployeeRoleByNameAsync(duplicateRoleName))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetEmployeeRoleByNameAsync(duplicateRoleName))
             .ReturnsAsync(Result<EmployeeRole>.Success(conflictingRole));
 
         // Act
-        var result = await _employeeRoleService.UpdateEmployeeRoleAsync(existingRoleId, updateRequest);
+        Result<EmployeeRoleResponse> result = await _employeeRoleService.UpdateEmployeeRoleAsync(existingRoleId, updateRequest);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -326,19 +322,20 @@ public class EmployeeRoleServiceTests
     {
         // Arrange
         var roleIdToDelete = EmployeeRoleId.New();
-        var existingRole = EmployeeRole.Create(RoleName.Create("ToDelete").Value!).Value!;
-        PropertyInfo propertyInfo = existingRole.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        EmployeeRole existingRole = EmployeeRole.Create(RoleName.Create("ToDelete").Value!).Value!;
+        PropertyInfo propertyInfo = existingRole.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         propertyInfo?.SetValue(existingRole, roleIdToDelete);
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(roleIdToDelete))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(roleIdToDelete))
             .ReturnsAsync(Result<EmployeeRole>.Success(existingRole));
-        _mockEmployeeRoleRepository.Setup(repo => repo.DeleteAsync(roleIdToDelete)) // Pass the EmployeeRoleId for setup
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.DeleteAsync(roleIdToDelete)) 
             .ReturnsAsync(Result.Success());
-        _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+        _ = _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
             .ReturnsAsync(1);
 
         // Act
-        var result = await _employeeRoleService.DeleteEmployeeRoleAsync(roleIdToDelete);
+        Result result = await _employeeRoleService.DeleteEmployeeRoleAsync(roleIdToDelete);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -363,11 +360,11 @@ public class EmployeeRoleServiceTests
         // Arrange
         var invalidRoleId = EmployeeRoleId.New();
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(invalidRoleId))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.GetByIdAsync(invalidRoleId))
             .ReturnsAsync(Result<EmployeeRole>.Failure(ErrorType.NotFound, new Error("NotFound", "Employee Role not found.")));
 
         // Act
-        var result = await _employeeRoleService.DeleteEmployeeRoleAsync(invalidRoleId);
+        Result result = await _employeeRoleService.DeleteEmployeeRoleAsync(invalidRoleId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -394,17 +391,19 @@ public class EmployeeRoleServiceTests
     public async Task GetEmployeeRolessAsync_ReturnsAllRoles()
     {
         // Arrange
-        var role1 = EmployeeRole.Create(RoleName.Create("Admin").Value!).Value!;
-        PropertyInfo propertyInfo1 = role1.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        EmployeeRole role1 = EmployeeRole.Create(RoleName.Create("Admin").Value!).Value!;
+        PropertyInfo propertyInfo1 = role1.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         propertyInfo1?.SetValue(role1, EmployeeRoleId.New());
 
         var role2 = EmployeeRole.Create(RoleName.Create("Editor").Value!).Value!;
-        PropertyInfo propertyInfo2 = role2.GetType().BaseType.GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
+        PropertyInfo propertyInfo2 = role2.GetType().BaseType
+            .GetProperty("Id", BindingFlags.Instance | BindingFlags.NonPublic);
         propertyInfo2?.SetValue(role2, EmployeeRoleId.New());
 
         var roles = new List<EmployeeRole> { role1, role2 };
 
-        _mockEmployeeRoleRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<EmployeeRole>>()))
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<EmployeeRole>>()))
             .ReturnsAsync(Result<IEnumerable<EmployeeRole>>.Success(roles));
 
         // Act
@@ -435,13 +434,13 @@ public class EmployeeRoleServiceTests
     public async Task GetEmployeeRolessAsync_ReturnsErrorOnRepositoryFailure()
     {
         // Arrange
-        var errorMessage = "Database error occurred while retrieving employee roles.";
-        _mockEmployeeRoleRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<EmployeeRole>>()))
+        string errorMessage = "Database error occurred while retrieving employee roles.";
+        _ = _mockEmployeeRoleRepository.Setup(repo => repo.ListAsync(It.IsAny<ISpecification<EmployeeRole>>()))
             .ReturnsAsync(Result<IEnumerable<EmployeeRole>>.Failure(ErrorType.Database, new Error("DatabaseError", errorMessage)));
 
         // Act
         var emptySpec = new BaseSpecification<EmployeeRole>();
-        var result = await _employeeRoleService.GetEmployeeRolessAsync(emptySpec);
+        Result<IEnumerable<EmployeeRoleResponse>> result = await _employeeRoleService.GetEmployeeRolessAsync(emptySpec);
 
         // Assert
         Assert.False(result.IsSuccess);
