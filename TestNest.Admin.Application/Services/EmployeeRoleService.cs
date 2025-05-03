@@ -141,7 +141,14 @@ public class EmployeeRoleService(
         using var scope = new TransactionScope(TransactionScopeOption.Required,
             new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
             TransactionScopeAsyncFlowOption.Enabled);
-        Result result = await _employeeRoleRepository.DeleteAsync(employeeRoleId);
+
+        Result<EmployeeRole> roleToDeleteResult = await _employeeRoleRepository.GetByIdAsync(employeeRoleId);
+        if (!roleToDeleteResult.IsSuccess)
+        {
+            return Result.Failure(roleToDeleteResult.ErrorType, roleToDeleteResult.Errors);
+        }
+
+        Result result = await _employeeRoleRepository.DeleteAsync(employeeRoleId); // Or DeleteAsync(roleToDeleteResult.Value!)
         if (!result.IsSuccess)
         {
             return result;
@@ -156,7 +163,6 @@ public class EmployeeRoleService(
         }
         return Result.Failure(commitResult.ErrorType, commitResult.Errors);
     }
-
     public async Task<Result<EmployeeRoleResponse>> GetEmployeeRoleByIdAsync(EmployeeRoleId employeeRoleId)
     {
         Result<EmployeeRole> employeeRoleResult = await _employeeRoleRepository.GetByIdAsync(employeeRoleId);

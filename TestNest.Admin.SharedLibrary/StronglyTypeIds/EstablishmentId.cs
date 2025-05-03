@@ -6,10 +6,6 @@ public sealed record EstablishmentId(Guid Value) : StronglyTypedId<Establishment
 {
     public EstablishmentId() : this(Guid.NewGuid()) { }
 
-    ////public static EstablishmentId Create(Guid value)
-    ////    => value == Guid.Empty ? throw StronglyTypedIdException.NullId()
-    ////        : new EstablishmentId(value);
-
     public static Result<EstablishmentId> Create(Guid value)
     {
         if (value == Guid.Empty)

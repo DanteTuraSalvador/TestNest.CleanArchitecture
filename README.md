@@ -22,7 +22,6 @@
 Change the connection string and Migrate and Run
 
 ## STILL TO COME
-* CQRS implementation 
 * Using Dapper for Repository
 * Utilizing Domain Events
 * And many more

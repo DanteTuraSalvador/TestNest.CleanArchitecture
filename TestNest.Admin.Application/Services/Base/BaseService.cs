@@ -43,9 +43,9 @@ public class BaseService(IUnitOfWork unitOfWork, ILogger logger, IDatabaseExcept
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex, "Database update error during SaveChangesAsync.");
             Result dbErrorResult = _exceptionHandlerFactory.HandleDbUpdateException(ex);
-            return Result<T>.Failure(dbErrorResult.ErrorType, dbErrorResult.Errors);
+            return Result<T>.Failure(dbErrorResult.ErrorType, dbErrorResult.Errors ?? []); // Ensure Errors is not null
+
         }
         catch (Exception ex)
         {

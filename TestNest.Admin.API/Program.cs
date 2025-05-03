@@ -62,8 +62,8 @@ public static class Program
 
         _ = builder.Services.AddDbContext<ApplicationDbContext>(options =>
              options.UseSqlServer(
-                 builder.Configuration.GetConnectionString("DefaultConnection"),
-                 sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()
+                 builder.Configuration.GetConnectionString("DefaultConnection")
+                 //,sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()
              )
          );
 

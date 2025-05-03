@@ -170,15 +170,17 @@ public class EstablishmentService(
 
         Result<Establishment> commitResult = await SafeCommitAsync(
             () => Result<Establishment>.Success(updatedEstablishmentResult.Value!));
-        if (commitResult.IsSuccess)
+
+        if (commitResult is null || !commitResult.IsSuccess)
         {
-            scope.Complete();
-            return Result<EstablishmentResponse>.Success(
-                commitResult.Value!.ToEstablishmentResponse());
+            return Result<EstablishmentResponse>.Failure(
+                commitResult?.ErrorType ?? ErrorType.Database,
+                commitResult?.Errors ?? new List<Error>());
         }
-        return Result<EstablishmentResponse>.Failure(
-            commitResult.ErrorType,
-            commitResult.Errors);
+
+        scope.Complete();
+        return Result<EstablishmentResponse>.Success(
+            commitResult.Value!.ToEstablishmentResponse());
     }
 
     public async Task<Result<EstablishmentResponse>> PatchEstablishmentAsync(
@@ -366,4 +368,6 @@ public class EstablishmentService(
             ? Result<IEnumerable<EstablishmentResponse>>.Success(establishmentsResult.Value!.Select(e => e.ToEstablishmentResponse()))
             : Result<IEnumerable<EstablishmentResponse>>.Failure(establishmentsResult.ErrorType, establishmentsResult.Errors);
     }
+
+
 }

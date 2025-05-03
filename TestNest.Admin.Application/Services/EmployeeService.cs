@@ -60,6 +60,22 @@ public class EmployeeService(
                 [.. combinedValidationResult.Errors]);
         }
 
+        bool roleExists = await _employeeRoleRepository.RoleIdExists(employeeRoleIdResult.Value!);
+        if (!roleExists)
+        {
+            var exceptions = EmployeeException.NotFound();
+            return Result<EmployeeResponse>.Failure(ErrorType.NotFound, new Error(exceptions.Code.ToString(), exceptions.Message.ToString()));
+        }
+
+        // Check if Establishment exists
+        bool establishmentExists = await _establishmentRepository.EstablishmentIdExists(establishmentIdResult.Value!);
+        if (!establishmentExists)
+        {
+             var exceptions = EstablishmentException.NotFound();
+            return Result<EmployeeResponse>.Failure(ErrorType.NotFound, new Error(exceptions.Code.ToString(), exceptions.Message.ToString()));
+        }
+
+
         Result<bool> uniquenessCheckResult = await EmployeeCombinationExistsAsync(
             employeeNumberResult.Value!,
             employeeNameResult.Value!,
@@ -161,11 +177,11 @@ public class EmployeeService(
             .Bind(e => e.WithEmployeeStatus(employeeStatusResult.Value!)).Value!;
 
         Result<bool> uniquenessCheckResult = await EmployeeCombinationExistsAsync(
-            employeeNumber.Value!,
-            employeeName.Value!,
-            employeeEmail.Value!,
-            establishmentId.Value!,
-            employeeId);
+        employeeNumber.Value!,
+        employeeName.Value!,
+        employeeEmail.Value!,
+        establishmentId.Value!,
+        employeeId);
 
         if (!uniquenessCheckResult.IsSuccess)
         {
