@@ -1,0 +1,587 @@
+{
+	"info": {
+		"_postman_id": "testnest-admin-api-collection",
+		"name": "TestNest Admin API",
+		"description": "Comprehensive collection for TestNest Admin API with authentication, employee management, establishment management, and all related endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "testnest"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://localhost:5001",
+			"type": "string"
+		},
+		{
+			"key": "api_version",
+			"value": "1.0",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', response.accessToken);",
+									"    pm.collectionVariables.set('refresh_token', response.refreshToken);",
+									"    console.log('Access token saved:', response.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@testnest.com\",\n  \"password\": \"Admin@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Auth", "login"]
+						},
+						"description": "Authenticates a user and returns JWT access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', response.accessToken);",
+									"    pm.collectionVariables.set('refresh_token', response.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Auth", "refresh"]
+						},
+						"description": "Refreshes an access token using a valid refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Auth/revoke",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Auth", "revoke"]
+						},
+						"description": "Revokes a refresh token."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for login, token refresh, and token revocation."
+		},
+		{
+			"name": "Employees",
+			"item": [
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Employees?pageNumber=1&pageSize=10&sortBy=EmployeeNumber&sortOrder=asc",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Employees"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "EmployeeNumber"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc"
+								},
+								{
+									"key": "employeeRoleId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "establishmentId",
+									"value": "",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of employees with optional filtering and sorting."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Employee By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Employees/:employeeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Employees", ":employeeId"],
+							"variable": [
+								{
+									"key": "employeeId",
+									"value": "replace-with-employee-id"
+								}
+							]
+						},
+						"description": "Retrieves a specific employee by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeNumber\": \"EMP-2024-001\",\n  \"firstName\": \"Juan\",\n  \"middleName\": \"Dela\",\n  \"lastName\": \"Cruz\",\n  \"emailAddress\": \"juan.delacruz@testnest.com\",\n  \"employeeRoleId\": \"replace-with-role-id\",\n  \"establishmentId\": \"replace-with-establishment-id\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Employees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Employees"]
+						},
+						"description": "Creates a new employee. Requires Manager or Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeNumber\": \"EMP-2024-001-UPDATED\",\n  \"firstName\": \"Juan\",\n  \"middleName\": \"Dela\",\n  \"lastName\": \"Cruz\",\n  \"emailAddress\": \"juan.delacruz.updated@testnest.com\",\n  \"employeeRoleId\": \"replace-with-role-id\",\n  \"establishmentId\": \"replace-with-establishment-id\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Employees/:employeeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Employees", ":employeeId"],
+							"variable": [
+								{
+									"key": "employeeId",
+									"value": "replace-with-employee-id"
+								}
+							]
+						},
+						"description": "Updates an existing employee. Requires Manager or Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Employee",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Employees/:employeeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Employees", ":employeeId"],
+							"variable": [
+								{
+									"key": "employeeId",
+									"value": "replace-with-employee-id"
+								}
+							]
+						},
+						"description": "Deletes an employee (soft delete). Requires Manager or Admin role."
+					},
+					"response": []
+				}
+			],
+			"description": "Employee management endpoints."
+		},
+		{
+			"name": "Employee Roles",
+			"item": [
+				{
+					"name": "Get All Employee Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/EmployeeRoles?pageNumber=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "EmployeeRoles"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of employee roles."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Employee Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roleName\": \"Manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/EmployeeRoles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "EmployeeRoles"]
+						},
+						"description": "Creates a new employee role. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Employee Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roleName\": \"Senior Manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/EmployeeRoles/:employeeRoleId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "EmployeeRoles", ":employeeRoleId"],
+							"variable": [
+								{
+									"key": "employeeRoleId",
+									"value": "replace-with-role-id"
+								}
+							]
+						},
+						"description": "Updates an existing employee role. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Employee Role",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/EmployeeRoles/:employeeRoleId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "EmployeeRoles", ":employeeRoleId"],
+							"variable": [
+								{
+									"key": "employeeRoleId",
+									"value": "replace-with-role-id"
+								}
+							]
+						},
+						"description": "Deletes an employee role (soft delete). Requires Admin role."
+					},
+					"response": []
+				}
+			],
+			"description": "Employee role management endpoints."
+		},
+		{
+			"name": "Establishments",
+			"item": [
+				{
+					"name": "Get All Establishments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Establishments?pageNumber=1&pageSize=10&sortBy=EstablishmentName&sortOrder=asc",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Establishments"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "EstablishmentName"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of establishments with optional sorting."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Establishment By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Establishments/:establishmentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Establishments", ":establishmentId"],
+							"variable": [
+								{
+									"key": "establishmentId",
+									"value": "replace-with-establishment-id"
+								}
+							]
+						},
+						"description": "Retrieves a specific establishment by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Establishment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"establishmentName\": \"TestNest Main Branch\",\n  \"emailAddress\": \"mainbranch@testnest.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Establishments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Establishments"]
+						},
+						"description": "Creates a new establishment. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Establishment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"establishmentName\": \"TestNest Main Branch - Updated\",\n  \"emailAddress\": \"mainbranch.updated@testnest.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Establishments/:establishmentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Establishments", ":establishmentId"],
+							"variable": [
+								{
+									"key": "establishmentId",
+									"value": "replace-with-establishment-id"
+								}
+							]
+						},
+						"description": "Updates an existing establishment. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Establishment",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v{{api_version}}/Establishments/:establishmentId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v{{api_version}}", "Establishments", ":establishmentId"],
+							"variable": [
+								{
+									"key": "establishmentId",
+									"value": "replace-with-establishment-id"
+								}
+							]
+						},
+						"description": "Deletes an establishment (soft delete). Requires Admin role."
+					},
+					"response": []
+				}
+			],
+			"description": "Establishment management endpoints."
+		},
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Returns the overall health status of the API."
+					},
+					"response": []
+				},
+				{
+					"name": "Ready Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health/ready",
+							"host": ["{{base_url}}"],
+							"path": ["health", "ready"]
+						},
+						"description": "Returns readiness status for Kubernetes readiness probes."
+					},
+					"response": []
+				},
+				{
+					"name": "Live Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health/live",
+							"host": ["{{base_url}}"],
+							"path": ["health", "live"]
+						},
+						"description": "Returns liveness status for Kubernetes liveness probes."
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints for monitoring and container orchestration."
+		}
+	]
+}
